@@ -3,14 +3,17 @@ import random
 import numpy as np
 import matplotlib.pylab as plt
 
-RESL = 20
-TIME = 0.05
-AMPL = 32000
+RESL = 200
+TIME = 0.0000
+AMPL = 500
+X_LEN = 250
+ERROR = AMPL * 0.2
 
-x = np.linspace(-np.pi, np.pi, RESL)
+x = np.linspace(-np.pi, np.pi, RESL+1)[:-1]
 
 def generate_data(i):
-    return [[np.sin(x[i])*AMPL]*3]*3
+    noise = (random.random() * ERROR) - ERROR / 2.0
+    return [[np.sin(x[i])*AMPL + noise]*3]*3
 
 if __name__ == '__main__':
     idx = 0
@@ -18,19 +21,26 @@ if __name__ == '__main__':
     xdata = []
     ydata = []
     axes = plt.gca()
-    axes.set_xlim(0, 1000)
+    axes.set_xlim(0, X_LEN)
     axes.set_ylim(-AMPL, AMPL)
     line, = axes.plot(xdata, ydata, 'r-')
+
 
     while True:
         v = generate_data(idx)
         idx = (idx + 1) % RESL
+
         print(v)
         time.sleep(TIME)
         
         tmp += 1
         xdata.append(tmp)
         ydata.append(v[0][0])
+        
+        if tmp > X_LEN:
+            ydata = ydata[1:]
+            xdata.pop()
+
         line.set_xdata(xdata)
         line.set_ydata(ydata)
         plt.draw()
