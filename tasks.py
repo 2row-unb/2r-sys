@@ -18,4 +18,4 @@ def run(ctx, log='WARNING'):
     Task to run 2RSystem
     """
     _setup_logging(log)
-    logging.info(f'Running 2RSystem')
+    system.start()
