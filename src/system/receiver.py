@@ -7,11 +7,12 @@ import paho.mqtt.client as mqtt
 from .config import settings
 
 
-def run():
+def run(rx=None, time=None):
     """
     Run the MQTT client to receive 2RE-Kernel informations
     """
-    rx = Rx()
+    if not rx:
+        rx = Rx()
     rx.run()
 
 
@@ -20,6 +21,7 @@ class Rx:
     Receive messages from 2RE Kernel
     """
     def __init__(self):
+        self.running = True
         self.client = mqtt.Client()
         self.client.on_connect = Rx.on_connect
         self.client.on_message = Rx.on_message
@@ -60,7 +62,8 @@ class Rx:
         Other loop*() functions are available that give a threaded interface
         and a manual interface.
         """
-        self.client.loop_forever()
+        while self.running:
+            self.client.loop()
 
 
 class Tx:
