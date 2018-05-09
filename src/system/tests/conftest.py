@@ -4,40 +4,29 @@ from . import helpers
 import paho.mqtt.client as mqtt
 
 from ..config import settings
-from ..receiver import Rx
-
-@pytest.fixture
-def mqtt_client():
-    return mqtt.Client()
+from ..rxtx import Rx, Tx
+from ..receiver import Receiver
 
 
 @pytest.fixture
-def mqtt_kernel_client(mqtt_client):
-    mqtt_client.connect(
-        settings.MQTT_2RE_KERNEL_URL,
-        settings.MQTT_2RE_KERNEL_PORT,
-        60
-    )
-    mqtt_client.subscribe(settings.MQTT_2RE_KERNEL_TOPIC)
-    return mqtt_client
+def kernel_receiver():
+    return Receiver()
 
 
 @pytest.fixture
-def mqtt_kernel_publish(mqtt_kernel_client):
+def kernel_publisher():
+    return Tx([settings.MQTT_2RE_KERNEL_TOPIC])
+
+
+@pytest.fixture
+def kernel_publish(kernel_publisher):
     return lambda msg: (lambda _:(time.sleep(0.2))
-    )(mqtt_kernel_client.publish(settings.MQTT_2RE_KERNEL_TOPIC, msg))
+    )(kernel_publisher.publish(msg))
 
 
-@pytest.fixture(scope="module", autouse=True)
-def mqtt_receiver():
-    global rx
-    rx = Rx()
-    th = helpers.start_receiver(rx)
-    yield mqtt_receiver  # provide the fixture value
+@pytest.fixture(autouse=True)
+def receiver(kernel_receiver):
+    receiver = kernel_receiver
+    th = helpers.start_receiver(receiver)
+    yield kernel_receiver  # provide the fixture value
     helpers.stop_receiver(th)
-
-
-@pytest.fixture
-def receiver():
-    global rx
-    return rx

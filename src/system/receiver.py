@@ -1,98 +1,35 @@
 """
-Receive messages from 2RE Kernel
+Receiver for 2RE KERNEL module
 """
-import logging
-import paho.mqtt.client as mqtt
 
+from .rxtx import Rx, Tx
 from .config import settings
 
 
-def run(rx=None, time=None):
+def run(receiver=None):
     """
-    Run the MQTT client to receive 2RE-Kernel informations
+    Run an instance of receiver
     """
-    if not rx:
-        rx = Rx()
-    rx.run()
+    if receiver:
+        receiver = Receiver()
+    receiver.run()
+    return receiver
 
 
-class Rx:
-    """
-    Receive messages from 2RE Kernel
-    """
+class Receiver(Rx):
     def __init__(self):
-        self.running = True
-        self.client = mqtt.Client()
-        self.client.on_connect = Rx.on_connect
-        self.client.on_message = Rx.on_message
-        self.client.connect(
-            settings.MQTT_2RE_KERNEL_URL, settings.MQTT_2RE_KERNEL_PORT, 60
-        )
+        topics = [settings.MQTT_2RE_KERNEL_TOPIC]
+        super().__init__(topics)
 
-    @staticmethod
-    def on_connect(client, userdata, flags, rc):
+        self.tx = Tx([settings.MQTT_2RS_CONTROLLER_TOPIC])
+
+    def _on_message(self):
+        def wrap(client, userdata, message):
+            self.tx.publish(self.format(message))
+        return wrap
+
+    def format(self, message):
         """
-        The callback for when the client receives a CONNACK response
-        from the server.
+        Format mqtt messages
         """
-        logging.info(f'Connected with Mosquitto Server: (code) {rc}')
-
-        # Subscribing in on_connect() means that if we lose the connection and
-        # reconnect then subscriptions will be renewed.
-        client.subscribe(settings.MQTT_2RE_KERNEL_TOPIC)
-        logging.debug(f'Subscribed the {settings.MQTT_2RE_KERNEL_TOPIC} topic')
-
-
-    @staticmethod
-    def on_message(client, userdata, msg):
-        """
-        The callback for when a PUBLISH message is received from the server.
-        """
-        logging.debug(f'Received message on {msg.topic}: '
-                      f'{msg.payload.decode("utf-8")}')
-
-        tx = Tx()
-        tx.publish(msg.payload.decode("utf-8"))
-
-
-    def run(self):
-        """
-        Blocking call that processes network traffic, dispatches callbacks and
-        handles reconnecting.
-        Other loop*() functions are available that give a threaded interface
-        and a manual interface.
-        """
-        while self.running:
-            self.client.loop()
-
-
-class Tx:
-    """
-    Singleton to receiver transmitter
-    """
-    _instance = None
-
-    def __new__(cls):
-        if Tx._instance is None:
-            Tx._instance = object.__new__(cls)
-        return Tx._instance
-
-    def __init__(self):
-        self.client = mqtt.Client()
-        self.client.on_connect = Tx.on_connect
-        self.client.connect(settings.MQTT_2RS_URL, settings.MQTT_2RS_PORT, 60)
-
-    @staticmethod
-    def on_connect(client, userdata, flags, rc):
-        """
-        The callback for when the client receives a CONNACK response
-        from the server.
-        """
-        logging.info(f'Connected with Mosquitto Server: (code) {rc}')
-
-    def publish(self, data):
-        """
-        Publish message to the 2RSystem controller queue
-        """
-        logging.debug(f'Publish on {settings.MQTT_2RS_CONTROLLER_TOPIC}')
-        self.client.publish(settings.MQTT_2RS_CONTROLLER_TOPIC, data)
+        return message.payload.decode("utf-8")

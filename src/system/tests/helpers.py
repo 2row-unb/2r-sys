@@ -7,7 +7,7 @@ class ThRx(Thread):
         self.rx = rx
 
     def stop(self):
-        self.rx.running = False
+        self.rx.stop()
 
     def run(self):
         self.rx.run()
