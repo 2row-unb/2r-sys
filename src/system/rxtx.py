@@ -118,11 +118,12 @@ class Tx:
             data (Message):
                 Message to publish
         """
-        print(self.topics)
-        if message.to:
+        if message.to in self.topics.keys():
             logging.debug(f'Publishing on {self.topics[message.to]}')
             self.client.publish(self.topics[message.to], message.encoded)
-        else:
+        elif not message.to:
             for _, topic in self.topics.items():
                 logging.debug(f'Publishing on {topic}')
                 self.client.publish(topic, message.encoded)
+        else:
+            logging.error(f'Error publishing on {message.to}')

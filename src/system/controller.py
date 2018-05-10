@@ -8,13 +8,16 @@ from .rxtx import Rx, Tx
 
 class Controller(Rx):
     def __init__(self):
-        topics = (
+        input_topics = (
             MQTTConfig.receiver['OUTPUT_TOPIC'],
             MQTTConfig.processor['OUTPUT_TOPIC'],
         )
-        super().__init__(topics)
+        super().__init__(input_topics)
 
-        self.tx = Tx((MQTTConfig.transmitter['INPUT_TOPIC'],))
+        output_topics = (
+            MQTTConfig.named_config('transmitter', 'INPUT_TOPIC'),
+        )
+        self.tx = Tx(dict(output_topics))
 
     def _on_message(self):
         def wrap(client, userdata, message):
