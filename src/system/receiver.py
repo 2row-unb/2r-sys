@@ -3,7 +3,7 @@ Receiver for 2RE KERNEL module
 """
 
 from .rxtx import Rx, Tx
-from .config import settings
+from .config.settings import MQTTConfig
 
 
 def run(receiver=None):
@@ -18,10 +18,10 @@ def run(receiver=None):
 
 class Receiver(Rx):
     def __init__(self):
-        topics = [settings.MQTT_2RE_KERNEL_TOPIC]
+        topics = (MQTTConfig.receiver['INPUT_TOPIC'],)
         super().__init__(topics)
 
-        self.tx = Tx([settings.MQTT_2RS_CONTROLLER_TOPIC])
+        self.tx = Tx((MQTTConfig.receiver['OUTPUT_TOPIC'],))
 
     def _on_message(self):
         def wrap(client, userdata, message):

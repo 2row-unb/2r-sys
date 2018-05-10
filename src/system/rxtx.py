@@ -4,7 +4,7 @@ Base for transmitters and receivers classes
 import logging
 import paho.mqtt.client as mqtt
 
-from .config import settings
+from .config.settings import MQTTConfig
 
 
 class Rx:
@@ -26,8 +26,8 @@ class Rx:
         ...             print(message.payload.decode("utf-8")
         ...     return wrap
     """
-    _url = settings.MQTT_URL
-    _port = settings.MQTT_PORT
+    _url = MQTTConfig.general['URL']
+    _port = MQTTConfig.general['PORT']
 
     def __init__(self, topics):
         self.running = True
@@ -93,8 +93,8 @@ class Tx:
         topics (list):
             list of strings with the topics to publish
     """
-    _url = settings.MQTT_URL
-    _port = settings.MQTT_PORT
+    _url = MQTTConfig.general['URL']
+    _port = MQTTConfig.general['PORT']
 
     def __init__(self, topics):
         self.topics = topics

@@ -1,9 +1,9 @@
 import pytest
 import time
-from . import helpers
 import paho.mqtt.client as mqtt
 
-from ..config import settings
+from . import helpers
+from ..config.settings import MQTTConfig
 from ..rxtx import Rx, Tx
 from ..receiver import Receiver
 
@@ -15,7 +15,7 @@ def kernel_receiver():
 
 @pytest.fixture
 def kernel_publisher():
-    return Tx([settings.MQTT_2RE_KERNEL_TOPIC])
+    return Tx((MQTTConfig.receiver['INPUT_TOPIC'],))
 
 
 @pytest.fixture
