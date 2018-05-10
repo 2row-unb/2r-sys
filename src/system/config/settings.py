@@ -11,11 +11,6 @@ class MQTTConfig:
         PORT=1883,
     )
 
-    kernel = dict(
-        READ_TOPIC="2re/kernel_r",
-        WRITE_TOPIC="2re/kernel_w"
-    )
-
     processor = dict(
         INPUT_TOPIC="2rs/processor/input",
         OUTPUT_TOPIC="2rs/processor/output",
@@ -30,3 +25,7 @@ class MQTTConfig:
         INPUT_TOPIC="2rs/receiver/input",
         OUTPUT_TOPIC="2rs/receiver/output",
     )
+
+    @classmethod
+    def named_config(cls, section, data):
+        return section, cls.__dict__[section][data]

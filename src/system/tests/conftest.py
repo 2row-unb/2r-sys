@@ -15,7 +15,10 @@ def kernel_receiver():
 
 @pytest.fixture
 def kernel_publisher():
-    return Tx((MQTTConfig.receiver['INPUT_TOPIC'],))
+    output_topics = [
+        MQTTConfig.named_config('receiver', 'INPUT_TOPIC'),
+    ]
+    return Tx(dict(output_topics))
 
 
 @pytest.fixture

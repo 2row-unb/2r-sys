@@ -77,7 +77,7 @@ class Rx:
                 logging.debug(f'Subscribed the {topic} topic')
             except:
                 logging.debug(f"Can't subscribe the {topic} topic")
-                
+
     def stop(self):
         """
         Stop running
@@ -87,11 +87,11 @@ class Rx:
 
 class Tx:
     """
-    Transmitter singleton
+    Handler for MQTT publishing
 
     Args:
-        topics (list):
-            list of strings with the topics to publish
+        topics (dict):
+            keys identify the topic, values for the mqtt topic names to publish
     """
     _url = MQTTConfig.general['URL']
     _port = MQTTConfig.general['PORT']
@@ -110,14 +110,19 @@ class Tx:
         """
         logging.debug(f'Connected with Mosquitto Server: (code) {rc}')
 
-    def publish(self, data):
+    def publish(self, message):
         """
-        Publish message to the 2RSystem controller queue
+        Publish message to the 2RSystem queue
 
         Args:
-            data (str):
+            data (Message):
                 Message to publish
         """
-        for topic in self.topics:
-            logging.debug(f'Publishing on {topic}')
-            self.client.publish(topic, data)
+        print(self.topics)
+        if message.to:
+            logging.debug(f'Publishing on {self.topics[message.to]}')
+            self.client.publish(self.topics[message.to], message.encoded)
+        else:
+            for _, topic in self.topics.items():
+                logging.debug(f'Publishing on {topic}')
+                self.client.publish(topic, message.encoded)
