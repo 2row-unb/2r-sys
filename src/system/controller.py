@@ -5,6 +5,8 @@ import pickle
 
 from .config.settings import MQTTConfig
 from .rxtx import Rx, Tx
+from .message import Message
+from .decorators import on_message
 
 class Controller(Rx):
     def __init__(self):
@@ -19,15 +21,23 @@ class Controller(Rx):
         )
         self.tx = Tx(dict(output_topics))
 
-    def _on_message(self):
-        def wrap(client, userdata, message):
-            self.tx.publish(self.format(message))
-        return wrap
+    @on_message
+    def _on_message(self, client, userdata, message):
+        self.act(message)
 
-    def format(self, message):
+    def act(self, message):
         """
         Format mqtt messages
         """
-        data = pickle.dumps(message)
-        print(str(data))
-        return pickle.loads(data)
+        for msg in self.unzip_message(message):
+            self.tx.publish(msg)
+
+    def unzip_message(self, message):
+        """
+        Divide message data by significant parts
+        """
+        #[FIXME] implemente split logical
+        return (
+            Message(message.data, to='processor'),
+            Message(message.data, to='transmitter'),
+        )

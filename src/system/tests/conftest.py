@@ -6,11 +6,17 @@ from . import helpers
 from ..config.settings import MQTTConfig
 from ..rxtx import Rx, Tx
 from ..receiver import Receiver
+from ..controller import Controller
 
 
 @pytest.fixture
 def kernel_receiver():
     return Receiver()
+
+
+@pytest.fixture
+def controller_receiver():
+    return Controller()
 
 
 @pytest.fixture
@@ -29,7 +35,13 @@ def kernel_publish(kernel_publisher):
 
 @pytest.fixture(autouse=True)
 def receiver(kernel_receiver):
-    receiver = kernel_receiver
-    th = helpers.start_receiver(receiver)
+    th = helpers.start_receiver(kernel_receiver)
     yield kernel_receiver  # provide the fixture value
+    helpers.stop_receiver(th)
+
+
+@pytest.fixture(autouse=True)
+def controller(controller_receiver):
+    th = helpers.start_receiver(controller_receiver)
+    yield controller_receiver
     helpers.stop_receiver(th)

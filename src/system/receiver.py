@@ -6,6 +6,7 @@ import logging
 from .rxtx import Rx, Tx
 from .message import Message
 from .config.settings import MQTTConfig
+from .decorators import on_message
 
 
 def run(receiver=None):
@@ -29,12 +30,11 @@ class Receiver(Rx):
         ]
         self.tx = Tx(dict(output_topics))
 
-    def _on_message(self):
-        def wrap(client, userdata, message):
-            logging.debug("[Receiver] received message")
-            self.tx.publish(self.format(message))
-            logging.debug("[Receiver] published message")
-        return wrap
+    @on_message
+    def act(self, client, userdata, message):
+        logging.debug("[Receiver] received message")
+        self.tx.publish(self.format(message))
+        logging.debug("[Receiver] published message")
 
     def format(self, message):
         """

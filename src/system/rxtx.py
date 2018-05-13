@@ -5,47 +5,81 @@ import logging
 import paho.mqtt.client as mqtt
 
 from .config.settings import MQTTConfig
+from .decorators import on_connect
 
 
-class Rx:
+class MQTTClient(type):
+    _url = MQTTConfig.general['URL']
+    _port = MQTTConfig.general['PORT']
+
+    def __call__(cls, *args, **kwargs):
+        obj = super(MQTTClient, cls).__call__(*args, **kwargs)
+        return cls.connect(obj)
+
+    @classmethod
+    def connect(cls, obj):
+        obj.client = mqtt.Client()
+        cls.activate_on_message_hook(obj)
+        cls.activate_on_connect_hook(obj)
+        obj.client.connect(MQTTClient._url, MQTTClient._port, 60)
+        return obj
+
+    @classmethod
+    def activate_on_message_hook(cls, obj):
+        action = lambda x: setattr(obj.client, 'on_message', x)
+        cls.activate_hook(obj, 'ON_MESSAGE_DECORATOR', action)
+
+    @classmethod
+    def activate_on_connect_hook(cls, obj):
+        action = lambda x: setattr(obj.client, 'on_connect', x)
+        cls.activate_hook(obj, 'ON_CONNECT_DECORATOR', action)
+
+    @classmethod
+    def activate_hook(cls, obj, dec_name, action):
+        hook_methods = cls.find_decorated_methods(obj, dec_name)
+
+        # Check there is a decorated method
+        if not len(hook_methods):
+            raise f'{dec_name} not found'
+
+        return action(hook_methods[0])
+
+    @classmethod
+    def find_decorated_methods(cls, obj, dec_name):
+        return ([
+            getattr(obj, x) for x in dir(obj)
+            if not x.startswith('__')
+            and callable(getattr(obj, x))
+            and cls.has_decorator(obj, x, dec_name)
+        ])
+
+    @classmethod
+    def has_decorator(cls, obj, func, dec_name):
+        return hasattr(getattr(obj, func), dec_name)
+
+
+class Rx(metaclass=MQTTClient):
     """
     Receive messages from specific mqtt queue
 
     Args:
-        url (str):
-            mqtt server URL
-        port (int):
-            mqtt server port
         topics (list):
             list of strings with the topic names
-
-    Example:
-        >>> class receiver(Rx):
-        ...     def on_message(self):
-        ...         def wrap(client, userdata, message):
-        ...             print(message.payload.decode("utf-8")
-        ...     return wrap
     """
-    _url = MQTTConfig.general['URL']
-    _port = MQTTConfig.general['PORT']
 
     def __init__(self, topics):
+        self.client = None
         self.running = True
         self.topics = topics
-        self.client = mqtt.Client()
-        self.client.on_connect = self._on_connect()
-        self.client.on_message = self._on_message()
-        self.client.connect(Rx._url, Rx._port, 60)
 
-    def _on_connect(self):
+    @on_connect
+    def _on_connect(self, client, userdata, flags, rc):
         """
         The callback for when the client receives a CONNACK response
         from the server.
         """
-        def wrap(client, userdata, flags, rc):
-            logging.info(f'Connected with Mosquitto Server: (code) {rc}')
-            self.subscribe(self.topics)
-        return wrap
+        logging.info(f'Connected with Mosquitto Server: (code) {rc}')
+        self.subscribe(self.topics)
 
     def _on_message(self):
         """
