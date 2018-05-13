@@ -16,7 +16,7 @@ def run(controller=None):
     """
     if not controller:
         controller = Controller()
-    logging.info("Running controller")
+    logging.info("[Controller] Running")
     controller.run()
     return controller
 
@@ -43,9 +43,10 @@ class Controller(Rx):
         """
         Format mqtt messages
         """
-        logging.debug("Controller received message")
+        logging.debug("[Controller] Message received")
         for msg in self.unzip_message(message):
             self.tx.publish(msg)
+        logging.debug("[Controller] Published messages")
 
     def unzip_message(self, message):
         """

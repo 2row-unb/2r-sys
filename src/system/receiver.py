@@ -15,7 +15,7 @@ def run(receiver=None):
     """
     if not receiver:
         receiver = Receiver()
-    logging.info("Running receiver")
+    logging.info("[Receiver] Running")
     receiver.run()
     return receiver
 
@@ -32,9 +32,9 @@ class Receiver(Rx):
 
     @on_message
     def act(self, client, userdata, message):
-        logging.debug("[Receiver] received message")
+        logging.debug("[Receiver] Received message")
         self.tx.publish(self.format(message))
-        logging.debug("[Receiver] published message")
+        logging.debug("[Receiver] Published message")
 
     def format(self, message):
         """
