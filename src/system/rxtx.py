@@ -160,7 +160,8 @@ class Tx:
 
     Args:
         topics (dict):
-            keys identify the topic, values for the mqtt topic names to publish
+            keys identify the topic, values for the mqtt topic
+            names to publish
     """
     _url = MQTTConfig.general['URL']
     _port = MQTTConfig.general['PORT']

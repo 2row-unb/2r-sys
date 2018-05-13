@@ -2,11 +2,24 @@
 2RS Controller
 """
 import pickle
+import logging
 
 from .config.settings import MQTTConfig
 from .rxtx import Rx, Tx
 from .message import Message
-from .decorators import on_message
+from .decorators import on_message, unqueued_message
+
+
+def run(controller=None):
+    """
+    Run an instance of controller
+    """
+    if controller:
+        controller = Controller()
+    logging.info("Running controller")
+    controller.run()
+    return controller
+
 
 class Controller(Rx):
     def __init__(self):
@@ -25,10 +38,12 @@ class Controller(Rx):
     def _on_message(self, client, userdata, message):
         self.act(message)
 
+    @unqueued_message
     def act(self, message):
         """
         Format mqtt messages
         """
+        logging.debug("Controller received message")
         for msg in self.unzip_message(message):
             self.tx.publish(msg)
 
