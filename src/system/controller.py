@@ -14,7 +14,7 @@ def run(controller=None):
     """
     Run an instance of controller
     """
-    if controller:
+    if not controller:
         controller = Controller()
     logging.info("Running controller")
     controller.run()

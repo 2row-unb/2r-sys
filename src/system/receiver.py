@@ -13,7 +13,7 @@ def run(receiver=None):
     """
     Run an instance of receiver
     """
-    if receiver:
+    if not receiver:
         receiver = Receiver()
     logging.info("Running receiver")
     receiver.run()
