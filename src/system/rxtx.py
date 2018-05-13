@@ -9,52 +9,87 @@ from .decorators import on_connect
 
 
 class MQTTClient(type):
+    """
+    Metaclass to handle MQTT methods and connections
+
+    Inheriting from this class it is possible to use decorators:
+        - @on_connect:
+            Decorate method to respond to MQTT Client connections
+
+        - @on_message:
+            Decorate method to respond to MQTT Client received messages
+
+    Example:
+        >>> class Receptor(metaclass=MQTTClient):
+        ...     pass
+    """
     _url = MQTTConfig.general['URL']
     _port = MQTTConfig.general['PORT']
 
     def __call__(cls, *args, **kwargs):
         obj = super(MQTTClient, cls).__call__(*args, **kwargs)
-        return cls.connect(obj)
+        return MQTTClient.connect(obj)
 
     @classmethod
-    def connect(cls, obj):
+    def connect(mcs, obj):
+        """
+        Connect new object to an MQTT client
+        """
         obj.client = mqtt.Client()
-        cls.activate_on_message_hook(obj)
-        cls.activate_on_connect_hook(obj)
+        mcs.activate_on_message_hook(obj)
+        mcs.activate_on_connect_hook(obj)
         obj.client.connect(MQTTClient._url, MQTTClient._port, 60)
         return obj
 
     @classmethod
-    def activate_on_message_hook(cls, obj):
+    def activate_on_message_hook(mcs, obj):
+        """
+        Configure 'on_message' decorated method as default
+        responding behavior
+        """
         action = lambda x: setattr(obj.client, 'on_message', x)
-        cls.activate_hook(obj, 'ON_MESSAGE_DECORATOR', action)
+        mcs.activate_hook(obj, 'ON_MESSAGE_DECORATOR', action)
 
     @classmethod
-    def activate_on_connect_hook(cls, obj):
+    def activate_on_connect_hook(mcs, obj):
+        """
+        Configure 'on_connect' decorated method as default
+        connecting behavior
+        """
         action = lambda x: setattr(obj.client, 'on_connect', x)
-        cls.activate_hook(obj, 'ON_CONNECT_DECORATOR', action)
+        mcs.activate_hook(obj, 'ON_CONNECT_DECORATOR', action)
 
     @classmethod
-    def activate_hook(cls, obj, dec_name, action):
-        hook_methods = cls.find_decorated_methods(obj, dec_name)
+    def activate_hook(mcs, obj, dec_name, action):
+        """
+        Apply an action to the first method decorated with a
+        specific decorator
+        """
+        hook_methods = mcs.find_decorated_methods(obj, dec_name)
 
         # Check there is a decorated method
-        if not len(hook_methods):
+        if not hook_methods:
             raise f'{dec_name} not found'
 
         return action(hook_methods[0])
 
     @classmethod
-    def find_decorated_methods(cls, obj, dec_name):
+    def find_decorated_methods(mcs, obj, dec_name):
+        """
+        Search for methods that have been decorated
+        """
         return ([
             getattr(obj, x) for x in dir(obj)
             if not x.startswith('__')
             and callable(getattr(obj, x))
-            and cls.has_decorator(obj, x, dec_name)
+            and mcs.has_decorator(obj, x, dec_name)
         ])
 
     @classmethod
-    def has_decorator(cls, obj, func, dec_name):
+    def has_decorator(mcs, obj, func, dec_name):
+        """
+        Check method is decorated
+        """
         return hasattr(getattr(obj, func), dec_name)
 
 
