@@ -3,6 +3,7 @@
 ## Requirements
 
 * tmux
+* mosquitto
 * python >= 3.6
 * pip3
 
@@ -20,6 +21,30 @@ To run 2rsystem, execute:
 make run
 ```
 
+It will open a splitted tmux with all 2RSystem nodes and an instance of Mosquitto MQTT server.
+
+You can run without tmux, just execute:
+
+```bash
+inv run -l info
+```
+
+`-l` option indicates the loglevel, `warning` (default), `info` and `debug`.
+
+You can run a single node of the system, execute:
+
+```bash
+inv run -i receiver -l info
+# or
+inv run -i controller -l info
+# or
+inv run -i transmitter -l info
+# or
+inv run -i processor -l info
+```
+
+`WARNING`: make sure there is an instance of the Mosquitto running.
+
 ### Tests
 
 To run 2rsystem tests, execute:
@@ -27,3 +52,5 @@ To run 2rsystem tests, execute:
 ```bash
 pytest
 ```
+
+It is necessary to start Mosquitto server to execute pytest.
