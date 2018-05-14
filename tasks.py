@@ -3,6 +3,7 @@ from invoke import task
 
 from src import system
 
+
 def _setup_logging(level):
     """
     Setup logging level
@@ -17,6 +18,7 @@ def install(ctx):
     cmd = 'pip install -r requirements.txt'
     result = ctx.run(cmd, hide=True, warn=True)
     print(result.stdout.splitlines()[-1])
+
 
 @task
 def run(ctx, instance=None, log='WARNING'):
