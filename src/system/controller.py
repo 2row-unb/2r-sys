@@ -8,18 +8,7 @@ from .config.settings import MQTTConfig
 from .rxtx import Rx, Tx
 from .message import Message
 from .decorators import on_message, unqueued_message
-
-
-def run(controller=None):
-    """
-    Run an instance of controller
-    """
-    if not controller:
-        controller = Controller()
-    logging.info("[Controller] Running")
-    controller.run()
-    return controller
-
+from .helpers import make_runner
 
 class Controller(Rx):
     def __init__(self):
@@ -57,3 +46,6 @@ class Controller(Rx):
             Message(message.data, to='processor'),
             Message(message.data, to='transmitter'),
         )
+
+
+run = make_runner(Controller)

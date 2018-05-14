@@ -7,17 +7,7 @@ from .rxtx import Rx, Tx
 from .message import Message
 from .config.settings import MQTTConfig
 from .decorators import on_message
-
-
-def run(receiver=None):
-    """
-    Run an instance of receiver
-    """
-    if not receiver:
-        receiver = Receiver()
-    logging.info("[Receiver] Running")
-    receiver.run()
-    return receiver
+from .helpers import make_runner
 
 
 class Receiver(Rx):
@@ -41,3 +31,6 @@ class Receiver(Rx):
         Format mqtt messages
         """
         return Message(message.payload)
+
+
+run = make_runner(Receiver)

@@ -1,6 +1,12 @@
 """
 Module to filter and process all data
 """
+from .rxtx import Rx
+from .helpers import make_runner
 
-def run(processor=None):
+
+class Processor(Rx):
     pass
+
+
+run = make_runner(Processor)

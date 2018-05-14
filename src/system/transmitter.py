@@ -1,6 +1,11 @@
 """
 Module to transmit data to 2RKernel
 """
+from .rxtx import Rx
+from .helpers import make_runner
 
-def run(transmitter=None):
+
+class Transmitter(Rx):
     pass
+
+run = make_runner(Transmitter)
