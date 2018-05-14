@@ -11,23 +11,24 @@ from .processor import run as processor_run
 
 
 PROC_FUNCS = {
-    '2RS-Receiver': receiver_run,
-    '2RS-Controller': controller_run,
-    '2RS-Processor': processor_run,
-    '2RS-Transmitter': transmitter_run,
+    'Receiver': receiver_run,
+    'Controller': controller_run,
+    'Processor': processor_run,
+    'Transmitter': transmitter_run,
 }
 
 
-def start():
+def start(instance=None):
     """
     Run a process for each 2RSystem sub module
     """
-    runner_procs = [run_instance(*kv) for kv in PROC_FUNCS.items()]
+    runner_procs = [run_instance(k, v) for k, v in PROC_FUNCS.items()
+                    if not instance or k == instance.capitalize()]
 
     for proc in runner_procs:
         proc.join()
 
-    logging.info("All system shutted down")
+    logging.info("[Success] Shutted down")
 
 def run_instance(name, func):
     """
