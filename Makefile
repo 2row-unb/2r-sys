@@ -7,7 +7,7 @@ SCREEN_A := "inv run -i receiver -l info"
 SCREEN_B := "inv run -i controller -l info"
 SCREEN_C := "inv run -i transmitter -l info"
 SCREEN_D := "inv run -i processor -l info"
-SCREEN_E := "mosquitto"
+SCREEN_E := "mosquitto | sudo docker-compose logs -f"
 
 run:
 	$(shell tmux new-session -d && tmux split-window -d -t 0 -h)
