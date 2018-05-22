@@ -201,8 +201,8 @@ class Tx:
                 topic name
         """
         if to in self.topics.keys():
-            logging.debug(f'Publishing on {self.topics[message.to]}')
-            self.client.publish(self.topics[message.to], message.encoded)
+            logging.debug(f'Publishing on {self.topics[to]}')
+            self.client.publish(self.topics[to], message)
         elif to is None:
             for _, topic in self.topics.items():
                 logging.debug(f'Publishing on {topic}')

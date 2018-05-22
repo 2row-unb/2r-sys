@@ -1,13 +1,12 @@
 """
 2RS Controller
 """
-import pickle
 import logging
 
 from .config.settings import MQTTConfig
 from .rxtx import Rx, Tx
-from .message import Message
-from .decorators import on_message, unqueued_message
+from .message import FullMessage
+from .decorators import on_message, unqueued_full_message
 from .helpers import make_runner
 
 class Controller(Rx):
@@ -25,14 +24,14 @@ class Controller(Rx):
 
     @on_message
     def _on_message(self, client, userdata, message):
+        logging.debug("[Controller] Message received")
         self.act(message)
 
-    @unqueued_message
+    @unqueued_full_message
     def act(self, message):
         """
         Format mqtt messages
         """
-        logging.debug("[Controller] Message received")
         for msg in self.unzip_message(message):
             self.tx.publish(msg)
         logging.debug("[Controller] Published messages")
@@ -43,8 +42,8 @@ class Controller(Rx):
         """
         #[FIXME] implemente split logical
         return (
-            Message(message.data, to='processor'),
-            Message(message.data, to='transmitter'),
+            FullMessage(message.data, to='processor'),
+            FullMessage(message.data, to='transmitter'),
         )
 
 

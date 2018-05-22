@@ -4,7 +4,7 @@ Receiver for 2RE KERNEL module
 import logging
 
 from .rxtx import Rx, Tx
-from .message import Message
+from .message import FullMessage
 from .config.settings import MQTTConfig
 from .decorators import on_message
 from .helpers import make_runner
@@ -30,7 +30,10 @@ class Receiver(Rx):
         """
         Format mqtt messages
         """
-        return Message(message.payload)
+        message = message.payload.decode('utf-8')
+        data = map(int, message.split(';'))
+        print(data)
+        return FullMessage(data)
 
 
 run = make_runner(Receiver)

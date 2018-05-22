@@ -11,11 +11,18 @@ ERROR = AMPL * 0.2
 
 x = np.linspace(-np.pi, np.pi, RESL+1)[:-1]
 
+def data_generator(func=None):
+    idx = 0
+    while True:
+        v = generate_data(idx)
+        idx = (idx + 1) % RESL
+        yield func(v) if func else v
+
 def generate_data(i):
     noise = (random.random() * ERROR) - ERROR / 2.0
-    return [[np.sin(x[i])*AMPL + noise]*3]*3
+    return [np.sin(x[i])*AMPL + noise]*23
 
-if __name__ == '__main__':
+def run():
     idx = 0
     tmp = 0
     xdata = []
@@ -35,7 +42,7 @@ if __name__ == '__main__':
         
         tmp += 1
         xdata.append(tmp)
-        ydata.append(v[0][0])
+        ydata.append(v[0])
         
         if tmp > X_LEN:
             ydata = ydata[1:]
@@ -47,3 +54,6 @@ if __name__ == '__main__':
         plt.pause(1e-17)
 
     plt.show()
+
+if __name__ == '__main__':
+    run()
