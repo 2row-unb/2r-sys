@@ -188,12 +188,24 @@ class Tx:
             data (Message):
                 Message to publish
         """
-        if message.to in self.topics.keys():
+        self.write(message.encoded, message.to)
+
+    def write(self, message, to=None):
+        """
+        Publish string to the 2RSystem queue
+
+        Args:
+            data (str):
+                string message to publish
+            to (str):
+                topic name
+        """
+        if to in self.topics.keys():
             logging.debug(f'Publishing on {self.topics[message.to]}')
             self.client.publish(self.topics[message.to], message.encoded)
-        elif not message.to:
+        elif to is None:
             for _, topic in self.topics.items():
                 logging.debug(f'Publishing on {topic}')
-                self.client.publish(topic, message.encoded)
+                self.client.publish(topic, message)
         else:
-            logging.error(f'Error publishing on {message.to}')
+            logging.error(f'Error publishing on {to}')
