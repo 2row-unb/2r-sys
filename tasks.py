@@ -13,6 +13,7 @@ def _setup_logging(level):
         level=getattr(logging, level.upper())
     )
 
+
 @task
 def install(ctx):
     cmd = 'pip install -r requirements.txt'

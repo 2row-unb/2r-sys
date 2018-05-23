@@ -30,6 +30,7 @@ def start(instance=None):
 
     logging.info("[Success] Shutted down")
 
+
 def run_instance(name, func):
     """
     Start a new process to execute a given function

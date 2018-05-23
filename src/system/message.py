@@ -2,47 +2,45 @@
 Module to handle message serialization
 """
 import struct
+import logging
 from paho.mqtt.client import MQTTMessage
 
-from .config.settings import MQTTConfig
+from .config.settings import Config
+
 
 class Message:
     """
-    Handler for pickle encoding data
+    Handler for struct encoding data
     """
-    _fmt = None
+    def __new__(cls, data, by=None, to=None):
+        fmt = (getattr(Config, to).input.fmt if to
+               else getattr(Config, by).output.fmt)
 
-    def __new__(cls, data=None, by=None, to=None):
         if isinstance(data, MQTTMessage):
-            by, to, *data = struct.unpack(cls._fmt, data.payload)
-            by = MQTTConfig.find_code(by) if by > 0 else None
-            to = MQTTConfig.find_code(to) if to > 0 else None
+            logging.debug("Converting MQTTMessage to Message Object")
+            logging.debug(f"Using format: {fmt}")
+            data = struct.unpack(fmt, data.payload)
 
+        logging.debug(f'New message data: {data}')
         message = object.__new__(cls)
         message.data = data
         message.by = by
         message.to = to
+        message.fmt = fmt
         return message
 
     @property
     def encoded(self):
-        return struct.pack(
-            self.__class__._fmt,
-            MQTTConfig.named_config(self.by, 'CODE')[1] if self.by else -1,
-            MQTTConfig.named_config(self.to, 'CODE')[1] if self.to else -1,
-            *self.data
-        )
+        return struct.pack(self.fmt, *self.data)
+
+    def __str__(self):
+        return str(self.data)
 
 
-class ActionMessage(Message):
-    _fmt = "i"*3
+class Writer:
+    @property
+    def me(self):
+        return self.__class__.__name__.lower()
 
-
-class FullMessage(Message):
-    """
-    (accelx1, accely1, accelz1, girox1, giroy1, giroz1, magnx1,
-    magny1, magnz1, accelx2, accely2, accelz2, girox2, giroy2,
-    giroz2, magnx2, magny2, magnz2, pot, temp,
-    button1, button2 , button3)
-    """
-    _fmt = "i"*25
+    def write_message(self, data, to=None):
+        return Message(data, to=to, by=self.me)

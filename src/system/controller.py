@@ -3,22 +3,23 @@
 """
 import logging
 
-from .config.settings import MQTTConfig
+from .config.settings import Config
 from .rxtx import Rx, Tx
-from .message import FullMessage
-from .decorators import on_message, unqueued_full_message
+from .message import Writer
+from .decorators import on_message, decode_message
 from .helpers import make_runner
 
-class Controller(Rx):
+
+class Controller(Rx, Writer):
     def __init__(self):
         input_topics = (
-            MQTTConfig.receiver['OUTPUT_TOPIC'],
-            MQTTConfig.processor['OUTPUT_TOPIC'],
+            Config.receiver.output.topic,
+            Config.processor.output.topic,
         )
         super().__init__(input_topics)
 
         output_topics = (
-            MQTTConfig.named_config('transmitter', 'INPUT_TOPIC'),
+            (Config.transmitter.name, Config.transmitter.input.topic),
         )
         self.tx = Tx(dict(output_topics))
 
@@ -27,23 +28,23 @@ class Controller(Rx):
         logging.debug("[Controller] Message received")
         self.act(message)
 
-    @unqueued_full_message
+    @decode_message(Config.receiver.name)
     def act(self, message):
         """
         Format mqtt messages
         """
         for msg in self.unzip_message(message):
             self.tx.publish(msg)
-        logging.debug("[Controller] Published messages")
+            logging.debug(f'[Controller] Publishing to {msg.to}')
 
     def unzip_message(self, message):
         """
         Divide message data by significant parts
         """
-        #[FIXME] implemente split logical
+        # [FIXME] implemente split logical
         return (
-            FullMessage(message.data, to='processor'),
-            FullMessage(message.data, to='transmitter'),
+            self.write_message(message.data, to=Config.transmitter.name),
+            self.write_message(message.data, to=Config.processor.name),
         )
 
 

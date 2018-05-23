@@ -5,17 +5,18 @@ import logging
 
 from .rxtx import Rx, Tx
 from .helpers import make_runner
-from .config.settings import MQTTConfig
-from .decorators import on_message, unqueued_full_message
+from .message import Writer
+from .config.settings import Config
+from .decorators import on_message, decode_message
 
 
-class Transmitter(Rx):
+class Transmitter(Rx, Writer):
     def __init__(self):
-        topics = (MQTTConfig.transmitter['INPUT_TOPIC'],)
+        topics = (Config.transmitter.input.topic,)
         super().__init__(topics)
 
         output_topics = (
-            MQTTConfig.named_config('transmitter', 'OUTPUT_TOPIC'),
+            (Config.transmitter.name, Config.transmitter.output.topic),
         )
         self.tx = Tx(dict(output_topics))
 
@@ -24,7 +25,7 @@ class Transmitter(Rx):
         logging.debug("[Transmitter] Message received")
         self.act(message)
 
-    @unqueued_full_message
+    @decode_message
     def act(self, message):
         self.tx.write(self.serialize_data(message))
         logging.debug("[Transmitter] Published messages")

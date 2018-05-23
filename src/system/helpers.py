@@ -3,6 +3,7 @@ Module with some helper functions
 """
 import logging
 
+
 def make_runner(cls):
     def runner(obj=None):
         """

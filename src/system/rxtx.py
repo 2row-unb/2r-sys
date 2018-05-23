@@ -4,7 +4,7 @@ Base for transmitters and receivers classes
 import logging
 import paho.mqtt.client as mqtt
 
-from .config.settings import MQTTConfig
+from .config.settings import Config
 from .decorators import on_connect
 
 
@@ -23,8 +23,8 @@ class MQTTClient(type):
         >>> class Receptor(metaclass=MQTTClient):
         ...     pass
     """
-    _url = MQTTConfig.general['URL']
-    _port = MQTTConfig.general['PORT']
+    _url = Config.general['URL']
+    _port = Config.general['PORT']
 
     def __call__(cls, *args, **kwargs):
         obj = super(MQTTClient, cls).__call__(*args, **kwargs)
@@ -160,11 +160,11 @@ class Tx:
 
     Args:
         topics (dict):
-            keys identify the topic, values for the mqtt topic
+            keys identify the topic,s for the mqtt topic
             names to publish
     """
-    _url = MQTTConfig.general['URL']
-    _port = MQTTConfig.general['PORT']
+    _url = Config.general['URL']
+    _port = Config.general['PORT']
 
     def __init__(self, topics):
         self.topics = topics
@@ -201,11 +201,11 @@ class Tx:
                 topic name
         """
         if to in self.topics.keys():
-            logging.debug(f'Publishing on {self.topics[to]}')
+            logging.debug(f'Publishing on topic {self.topics[to]}')
             self.client.publish(self.topics[to], message)
         elif to is None:
             for _, topic in self.topics.items():
-                logging.debug(f'Publishing on {topic}')
+                logging.debug(f'Publishing on topic {topic}')
                 self.client.publish(topic, message)
         else:
-            logging.error(f'Error publishing on {to}')
+            logging.error(f'Error publishing to {to}')

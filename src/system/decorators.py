@@ -1,7 +1,7 @@
 """
 Decorators module
 """
-from .message import FullMessage
+from .message import Message
 
 
 def on_message(func):
@@ -20,10 +20,19 @@ def on_connect(func):
     return func
 
 
-def unqueued_full_message(func):
-    """
-    Decorator to convert a byte message to a Message object
-    """
-    def wrapper(self, message, *args, **kwargs):
-        func(self, FullMessage(message), *args, **kwargs)
-    return wrapper
+def decode_message(*args):
+    def decode(func):
+        """
+        Decorator to convert a byte message to a Message object
+        """
+        def wrapper(self, message, *args, **kwargs):
+            to = None if by else self.me
+            func(self, Message(message, by=by, to=to), *args, **kwargs)
+        return wrapper
+
+    if len(args) == 1 and callable(args[0]):
+        by = None
+        return decode(args[0])
+    else:
+        by, = args
+        return decode

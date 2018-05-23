@@ -2,48 +2,39 @@
 Global configurations of 2RSystem
 """
 
-class MQTTConfig:
-    """
-    Configuration class for MQTT protocol
-    """
-    general = dict(
-        URL="localhost",
-        PORT=1883,
-    )
+from collections import namedtuple
 
-    controller = dict(
-        CODE=0,
-    )
+Topic = namedtuple('Topic', ['topic', 'fmt'])
+Module = namedtuple('Module', ['name', 'input', 'output'])
 
-    processor = dict(
-        INPUT_TOPIC="2rs/processor/input",
-        OUTPUT_TOPIC="2rs/processor/output",
-        CODE=1,
-    )
 
-    transmitter = dict(
-        INPUT_TOPIC="2rs/transmitter/input",
-        OUTPUT_TOPIC="2rs/transmitter/output",
-        CODE=2,
-    )
+def enum(**named_args):
+    return type('MetaConfig', (), named_args)
 
-    receiver = dict(
-        INPUT_TOPIC="2rs/receiver/input",
-        OUTPUT_TOPIC="2rs/receiver/output",
-        CODE=3,
-    )
 
-    code = {
-        0: 'controller',
-        1: 'processor',
-        2: 'transmitter',
-        3: 'receiver',
-    }
+Config = enum(
+    general={
+        'URL': "localhost",
+        'PORT': 1883,
+    },
 
-    @classmethod
-    def named_config(cls, section, data):
-        return section, cls.__dict__[section][data]
+    controller=Module('controller', None, None),
 
-    @classmethod
-    def find_code(cls, code):
-        return cls.code[code]
+    processor=Module(
+        'processor',
+        Topic('2rs/processor/input', 'i'*23),
+        Topic('2rs/processor/output', 'i'*23)
+    ),
+
+    transmitter=Module(
+        'transmitter',
+        Topic('2rs/transmitter/input', 'i'*23),
+        Topic('2rs/transmitter/output', 'ffff')
+    ),
+
+    receiver=Module(
+        'receiver',
+        Topic('2rs/receiver/input', None),
+        Topic('2rs/receiver/output', 'i'*23)
+    ),
+)

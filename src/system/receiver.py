@@ -4,20 +4,20 @@ Receiver for 2RE KERNEL module
 import logging
 
 from .rxtx import Rx, Tx
-from .message import FullMessage
-from .config.settings import MQTTConfig
+from .message import Writer
+from .config.settings import Config
 from .decorators import on_message
 from .helpers import make_runner
 
 
-class Receiver(Rx):
+class Receiver(Rx, Writer):
     def __init__(self):
-        topics = (MQTTConfig.receiver['INPUT_TOPIC'],)
+        topics = (Config.receiver.input.topic,)
         super().__init__(topics)
 
-        output_topics = [
-            MQTTConfig.named_config('receiver','OUTPUT_TOPIC')
-        ]
+        output_topics = (
+            (Config.receiver.name, Config.receiver.output.topic),
+        )
         self.tx = Tx(dict(output_topics))
 
     @on_message
@@ -32,8 +32,7 @@ class Receiver(Rx):
         """
         message = message.payload.decode('utf-8')
         data = map(int, message.split(';'))
-        print(data)
-        return FullMessage(data)
+        return self.write_message(data)
 
 
 run = make_runner(Receiver)
