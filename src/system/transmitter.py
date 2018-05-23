@@ -16,21 +16,23 @@ class Transmitter(Rx, Writer):
         super().__init__(topics)
 
         output_topics = (
-            (Config.transmitter.name, Config.transmitter.output.topic),
+            (Config.kernel.name, Config.kernel.input.topic),
         )
         self.tx = Tx(dict(output_topics))
 
     @on_message
     def _on_message(self, client, userdata, message):
-        logging.debug("[Transmitter] Message received")
+        logging.info("[Transmitter] Message received")
         self.act(message)
 
     @decode_message
     def act(self, message):
-        self.tx.write(self.serialize_data(message))
-        logging.debug("[Transmitter] Published messages")
+        serialized_data = self.serialize_data(message.data)
+        msg = self.write_message(serialized_data, to=Config.kernel.name)
+        logging.info(f"[Transmitter] Publishing to {msg.to}")
+        self.tx.publish(msg)
 
-    def serialize_data(self, message):
+    def serialize_data(self, data):
         """
         Serialize message data to the 2RE-Kernel
 
@@ -38,8 +40,7 @@ class Transmitter(Rx, Writer):
             message (Message):
                 message object to be serialized
         """
-        print(message.data)
-        return "AAAAAAAAA"
+        return data
 
 
 run = make_runner(Transmitter)

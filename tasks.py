@@ -41,7 +41,7 @@ def faker(ctx, mqtt=False, timer=0.3, shot=False):
         c.connect('localhost', 1883, 60)
         func = lambda x: c.publish(
             '2rs/receiver/input',
-            ";".join(map(lambda a: str(int(a)), x))
+            ";".join(map(lambda a: str(float(a)), x))
         )
     else:
         func = lambda x: list(map(int, x))

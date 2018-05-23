@@ -22,16 +22,17 @@ class Receiver(Rx, Writer):
 
     @on_message
     def act(self, client, userdata, message):
-        logging.debug("[Receiver] Received message")
-        self.tx.publish(self.format(message))
-        logging.debug("[Receiver] Published message")
+        logging.info("[Receiver] Received message")
+        fmtd_message = self.format(message)
+        logging.info(f'[Receiver] Publishing message to {fmtd_message.to}')
+        self.tx.publish(fmtd_message)
 
     def format(self, message):
         """
         Format mqtt messages
         """
         message = message.payload.decode('utf-8')
-        data = map(int, message.split(';'))
+        data = map(float, message.split(';'))
         return self.write_message(data)
 
 

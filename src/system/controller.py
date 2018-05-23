@@ -25,7 +25,7 @@ class Controller(Rx, Writer):
 
     @on_message
     def _on_message(self, client, userdata, message):
-        logging.debug("[Controller] Message received")
+        logging.info("[Controller] Message received")
         self.act(message)
 
     @decode_message(Config.receiver.name)
@@ -35,7 +35,7 @@ class Controller(Rx, Writer):
         """
         for msg in self.unzip_message(message):
             self.tx.publish(msg)
-            logging.debug(f'[Controller] Publishing to {msg.to}')
+            logging.info(f'[Controller] Publishing to {msg.to}')
 
     def unzip_message(self, message):
         """
@@ -43,7 +43,7 @@ class Controller(Rx, Writer):
         """
         # [FIXME] implemente split logical
         return (
-            self.write_message(message.data, to=Config.transmitter.name),
+            self.write_message([1], to=Config.transmitter.name),
             self.write_message(message.data, to=Config.processor.name),
         )
 
