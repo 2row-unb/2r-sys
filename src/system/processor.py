@@ -32,7 +32,7 @@ class Processor(Rx, Writer):
         processed_data = self.process(message.data)
         message = self.write_message(processed_data)
         logging.info("[Processor] Publishing message")
-        self.tx.write(message)
+        self.tx.publish(message)
 
     def process(self, data):
         logging.info('[Processor] processing data')

@@ -20,6 +20,7 @@ class Controller(Rx, Writer):
 
         output_topics = (
             (Config.transmitter.name, Config.transmitter.input.topic),
+            (Config.processor.name, Config.processor.input.topic),
         )
         self.tx = Tx(dict(output_topics))
 
