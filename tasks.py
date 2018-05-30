@@ -39,14 +39,14 @@ def faker(ctx, mqtt=False, timer=0.3, shot=False):
         from paho.mqtt.client import Client
         c = Client()
         c.connect('localhost', 1883, 60)
-        func = lambda x: c.publish(
-            '2rs/receiver/input',
-            ";".join(map(lambda a: str(float(a)), x))
-        )
+        gen = data_generator(
+            lambda x: c.publish(
+                '2rs/receiver/input',
+                ";".join(map(lambda a: str(float(a)), x))
+            ))
     else:
-        func = lambda x: list(map(int, x))
+        gen = data_generator(lambda x: list(map(int, x)))
 
-    gen = data_generator(func)
     while True:
         next(gen)
         time.sleep(timer)

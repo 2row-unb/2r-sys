@@ -4,8 +4,6 @@ Receiver for 2RE KERNEL module
 import logging
 import gabby
 
-from .helpers import make_runner
-
 
 class Receiver(gabby.Gabby):
     """
@@ -13,8 +11,7 @@ class Receiver(gabby.Gabby):
     to 2RS-System
     """
     def transform(self, message):
-        logging.info(f'Transforming data: {message.data}')
-        return [gabby.Message(message.data, self.output_topics)]
-
-
-run = make_runner(Receiver)
+        logging.info(f'Transforming data: {message.payload.decode("utf-8")}')
+        decoded_data = [float(x) for x in
+                        message.payload.decode('utf-8').split(';')]
+        return [gabby.Message(decoded_data, self.output_topics)]

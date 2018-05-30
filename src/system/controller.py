@@ -4,8 +4,6 @@
 import logging
 import gabby
 
-from .helpers import make_runner
-
 
 class Controller(gabby.Gabby):
     """
@@ -15,6 +13,3 @@ class Controller(gabby.Gabby):
     def transform(self, message):
         logging.info(f'Transforming data {message.data}')
         return [gabby.Message(message.data, self.output_topics)]
-
-
-run = make_runner(Controller)
