@@ -2,19 +2,42 @@
 Module to control async execution of all 2RSystem components
 """
 import logging
-from multiprocessing import Process
+import gabby
 
-from .receiver import run as receiver_run
-from .controller import run as controller_run
-from .transmitter import run as transmitter_run
-from .processor import run as processor_run
+from .config.settigs import MOSQUITTO_URL, MOSQUITTO_PORT, MOSQUITTO_KEEPALIVE
+from .receiver import Receiver
+from .controller import Controller
+from .transmitter import Transmitter
+from .processor import Processor
+from .topics import get_topics
 
 
-PROC_FUNCS = {
-    'Receiver': receiver_run,
-    'Controller': controller_run,
-    'Processor': processor_run,
-    'Transmitter': transmitter_run,
+_mosquitto_config = [MOSQUITTO_URL, MOSQUITTO_PORT, MOSQUITTO_KEEPALIVE]
+
+_modules = {
+    'receiver': Receiver(
+        get_topics('kernel_receiver'),
+        get_topics('receiver_controller'),
+        *_mosquitto_config
+    ),
+
+    'controller': Controller(
+        get_topics('receiver_controller', 'processor_controller'),
+        get_topics('controller_transmitter', 'controller_processor'),
+        *_mosquitto_config
+    ),
+
+    'transmitter': Transmitter(
+        get_topics('controller_transmitter'),
+        get_topics('transmitter_kernel'),
+        *_mosquitto_config
+    ),
+
+    'processor': Processor(
+        get_topics('controller_processor'),
+        get_topics('processor_controller'),
+        *_mosquitto_config
+    ),
 }
 
 
@@ -22,20 +45,14 @@ def start(instance=None):
     """
     Run a process for each 2RSystem sub module
     """
-    runner_procs = [run_instance(k, v) for k, v in PROC_FUNCS.items()
-                    if not instance or k == instance.capitalize()]
+    control = gabby.Controller()
 
-    for proc in runner_procs:
-        proc.join()
+    if instance is not None:
+        logging.info(f'Add {instance} to System Control')
+        control.add_gabby(_modules[instance])
+    else:
+        for k, v in _modules.items():
+            logging.info(f'Add {k} to System Control')
+            control.add_gabby[v]
 
-    logging.info("[Success] Shutted down")
-
-
-def run_instance(name, func):
-    """
-    Start a new process to execute a given function
-    """
-    logging.info(f'Starting {name}')
-    proc = Process(target=func)
-    proc.start()
-    return proc
+    control.run()
