@@ -13,7 +13,7 @@ class Processor(gabby.Gabby):
     """
 
     def __init__(self, *args, **kwargs):
-        super().__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.ahrs = MadgwickAHRS()
 
     def transform(self, message):
