@@ -12,4 +12,10 @@ class Controller(gabby.Gabby):
     """
     def transform(self, message):
         logging.info(f'Transforming data {message.data}')
+
+        if message.topics.name == '2rs/processor/output':
+            logging.info(f'Sending to viewer {message.data}')
+            # return [gabby.Message(message.data, list(filter(lambda x : x.name == '2rs/viewer/input', self.output_topics)))]
+            return []
+
         return [gabby.Message(message.data, self.output_topics)]
