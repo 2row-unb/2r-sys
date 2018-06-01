@@ -41,7 +41,7 @@ def faker(ctx, mqtt=False, timer=0.3, shot=False):
         c.connect('localhost', 1883, 60)
         gen = data_generator(
             lambda x: c.publish(
-                '2rs/receiver/input',
+                'kernel_receiver',
                 ";".join(map(lambda a: str(float(a)), x))
             ))
     else:

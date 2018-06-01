@@ -8,4 +8,4 @@ pyparsing==2.2.0
 python-dateutil==2.7.2
 pytz==2018.4
 six==1.11.0
-gabby==0.0.4
+gabby==0.0.5

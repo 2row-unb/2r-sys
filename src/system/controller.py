@@ -31,21 +31,12 @@ class Controller(gabby.Gabby):
             return [
                 gabby.Message(
                     message.data[:18],
-                    topics=self.get_topics('controller_processor')
+                    topics=(
+                        self
+                        .output_topics
+                        .filter_by(name='controller_processor')
+                    )
                 ),
-
-                # gabby.Message(
-                #     message.data[18:],
-                #     topics=get_topics('controller_transmitter')
-                # )
             ]
 
         return []
-
-    def get_topics(self, alias):
-        return list(
-            filter(
-                lambda x: x.alias == alias,
-                [*self.output_topics, *self.input_topics]
-            )
-        )
