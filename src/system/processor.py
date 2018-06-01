@@ -2,7 +2,6 @@
 Module to filter and process all data
 """
 from ..madgwick.madgwickahrs import MadgwickAHRS
-import numpy
 import logging
 import gabby
 
