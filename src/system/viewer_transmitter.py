@@ -16,11 +16,17 @@ class ViewerTransmitter(gabby.Gabby):
         """
         Transform data to viewer
         """
-        logging.info(f'Transforming data: {message.data}')
+        self.post(message.data)
         return []
 
     def post(self, data):
         """
         Post data to a viewer socket
         """
-        requests.post(VIEWER_URL, data={'values': data})
+        logging.debug("Sending http request to Viewer")
+        try:
+            requests.post(VIEWER_URL, data={'values': data})
+        except:
+            logging.error("Failed sending message to Viewer")
+        else:
+            logging.debug("Success sending message to Viewer")

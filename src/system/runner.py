@@ -36,8 +36,8 @@ def get_modules():
 
         'transmitter': ViewerTransmitter(
             get_topics('controller_transmitter'),
-            decode_input=True,
-            **dict(zip(['url', 'port', 'keepalive'], mosquitto_config))
+            None, True,
+            *mosquitto_config
         ),
 
         'processor': Processor(

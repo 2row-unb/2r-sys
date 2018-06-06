@@ -34,7 +34,7 @@ inv run -l info
 You can run a single node of the system, execute:
 
 ```bash
-inv run -i receiver -l info
+inv run -i kernel -l info
 # or
 inv run -i controller -l info
 # or
@@ -46,6 +46,13 @@ inv run -i processor -l info
 `WARNING`: make sure there is an instance of the Mosquitto running.
 
 ### Tests
+
+You can test manually using:
+
+```bash
+inv run --log debug
+inv faker --mqtt --timer 0.1
+```
 
 To run 2rsystem tests, execute:
 

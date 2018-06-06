@@ -15,16 +15,10 @@ class Controller(gabby.Gabby):
 
         if message.belongs_to('processor_controller'):
             logging.info('Received message from processor')
-            # return [gabby.Message(
-            #     message.data,
-            #     list(
-            #         filter(
-            #             lambda x : x.name == '2rs/viewer/input',
-            #             self.output_topics)
-            #         )
-            #     )
-            # ]
-            return []
+            message.topics = self.output_topics.filter_by(
+                name='controller_transmitter'
+            )
+            return [message]
 
         elif message.belongs_to('kernel_controller'):
             logging.info('Received message from receiver')
