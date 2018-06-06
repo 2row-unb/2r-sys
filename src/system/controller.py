@@ -26,7 +26,7 @@ class Controller(gabby.Gabby):
             # ]
             return []
 
-        elif message.belongs_to('receiver_controller'):
+        elif message.belongs_to('kernel_controller'):
             logging.info('Received message from receiver')
             return [
                 gabby.Message(

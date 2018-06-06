@@ -3,10 +3,10 @@ clean:
 	echo "cleaning no files"
 
 # Each screen show
-SCREEN_A := "inv run -i receiver -l info"
-SCREEN_B := "inv run -i controller -l info"
-SCREEN_C := "inv run -i transmitter -l info"
-SCREEN_D := "inv run -i processor -l info"
+SCREEN_A := "inv run -i kernel -l debug"
+SCREEN_B := "inv run -i controller -l debug"
+SCREEN_C := "inv run -i transmitter -l debug"
+SCREEN_D := "inv run -i processor -l debug"
 SCREEN_E := "mosquitto"
 
 run_with_mosquitto:

@@ -5,7 +5,6 @@ import logging
 import gabby
 
 from .config.settings import MOSQUITTO_URL, MOSQUITTO_PORT, MOSQUITTO_KEEPALIVE
-from .receiver import Receiver
 from .controller import Controller
 from .transmitter import Transmitter
 from .processor import Processor
@@ -18,21 +17,14 @@ def get_modules():
 
     return {
         'kernel': Kernel(
-            get_topics('esp_kernel'),
-            get_topics('kernel_receiver'),
+            get_topics('esp_kernel', 'transmitter_kernel'),
+            get_topics('kernel_controller'),
             False,
             *mosquitto_config
         ),
 
-        'receiver': Receiver(
-            get_topics('kernel_receiver'),
-            get_topics('receiver_controller'),
-            True,
-            *mosquitto_config
-        ),
-
         'controller': Controller(
-            get_topics('receiver_controller', 'processor_controller'),
+            get_topics('kernel_controller', 'processor_controller'),
             get_topics('controller_transmitter', 'controller_processor'),
             True,
             *mosquitto_config
