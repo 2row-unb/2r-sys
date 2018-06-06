@@ -5,6 +5,7 @@ import gabby
 
 
 _topics = gabby.TopicCollection(
+    gabby.Topic('esp_kernel', 'f'*18),
     gabby.Topic('kernel_receiver', 'f'*23),
     gabby.Topic('receiver_controller', 'f'*23),
     gabby.Topic('controller_transmitter', 'f'*23),

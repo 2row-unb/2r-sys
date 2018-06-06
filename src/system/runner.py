@@ -9,6 +9,7 @@ from .receiver import Receiver
 from .controller import Controller
 from .transmitter import Transmitter
 from .processor import Processor
+from .kernel import Kernel
 from .topics import get_topics
 
 
@@ -16,10 +17,17 @@ def get_modules():
     mosquitto_config = [MOSQUITTO_URL, MOSQUITTO_PORT, MOSQUITTO_KEEPALIVE]
 
     return {
+        'kernel': Kernel(
+            get_topics('esp_kernel'),
+            get_topics('kernel_receiver'),
+            False,
+            *mosquitto_config
+        ),
+
         'receiver': Receiver(
             get_topics('kernel_receiver'),
             get_topics('receiver_controller'),
-            False,
+            True,
             *mosquitto_config
         ),
 
