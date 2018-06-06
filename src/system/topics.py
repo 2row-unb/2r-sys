@@ -7,8 +7,8 @@ import gabby
 _topics = gabby.TopicCollection(
     gabby.Topic('esp_kernel', 'f'*18),
     gabby.Topic('kernel_controller', 'f'*23),
-    gabby.Topic('controller_transmitter', 'f'*23),
-    gabby.Topic('transmitter_kernel', 'i'),
+    gabby.Topic('controller_kernel', 'i'),
+    gabby.Topic('controller_transmitter', 'f'*15),
     gabby.Topic('controller_processor', 'f'*18),
     gabby.Topic('processor_controller', 'f'*15),
 )
