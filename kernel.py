@@ -6,252 +6,130 @@ import gabby
 import logging
 import RPi.GPIO as GPIO
 import time
-import math
+
+from .config.settings import BUTTONS_DEBOUNCE
 
 
-
-GPIO.setwarnings(False) 
+GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BOARD)
 
 
-indice = 0
-
 class Kernel(gabby.Gabby):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.power_level = 0
+
     def transform(self, message):
-	if message.belongs_to('esp_kernel'):
-        	logging.debug(
-            	f"Received message, data: {message.payload.decode('utf-8')}")
-        	imu_data = [float(x) for x in
-                	message.payload.decode('utf-8').split(';')]
+        if message.belongs_to('esp_kernel'):
+            logging.debug(
+                f"Received message, data: {message.payload.decode('utf-8')}")
+            imu_data = [float(x) for x in
+                        message.payload.decode('utf-8').split(';')]
 
-        buttons_info = self.get_buttons()
-        weight_info = self.get_weight()
-        time_info = self.get_time()
-	
-	if message.belongs_to('transmitter_kernel'):
-       		logging.info(f'Received message from transmitter: {message.data}')
+            buttons_info = self.get_buttons()
+            weight_info = self.get_weight()
+            time_info = time.time()
 
-	    	button_data = message.data
-	   
-  		self.Controller_weigth(button_data)          
+            data = [*imu_data, time_info, *buttons_info, weight_info]
+            return [gabby.Message(data, self.output_topics)]
 
+        if message.belongs_to('transmitter_kernel'):
+            logging.info(f'Received message from transmitter: {message.data}')
 
-        data = [*imu_data, time_info, *buttons_info, weight_info]
-        return [gabby.Message(data, self.output_topics)]
+            button_data = message.data
+            self.update_weigth(button_data)
 
-    def get_time(self):
-    	#time.sleep()
+            return []
 
-	tx= time.time()
+    def get_weight(self):
+        DAT1 = 15
+        CLK1 = 16
+        DAT2 = 13
+        CLK2 = 8
 
-	get_time()
+        strain_gages = ((DAT1, CLK1), (DAT2, CLK2))
+        total_weight = sum(
+            [self._get_normalized_weight(dat, clk)
+             for dat, clk in strain_gages]
+        )
+        power = total_weight*9.81*0.7071
 
-	ty  = time.time() - tx
-
-	#print ty
-	
-        return ty
-
+        return power
 
     def get_buttons(self):
         button_reset = 0
-	
-        #Define o pino do botao como entrada
-        GPIO.setup(18, GPIO.IN)
-        GPIO.setup(11, GPIO.IN)
-        GPIO.setup(12, GPIO.IN)
-        
-    	if GPIO.input(18) == True:
-        	time.sleep(0.3)
-		indice += 1
-		if (indice > 4):
-			indice = 0
-			
-		    
-	if GPIO.input(11) == True:
-		time.sleep(0.3)
-        	indice -= 1
-		if (indice < 0):
-			indice = 0
-		    
-	if GPIO.input(12) == True:
-		button_reset = 1
-        	
-        
-	#return [indice, button_reset]"
-	#print "inidice:" +str(indice)
-	#print "reset:" +str(button_reset)
-	#time.sleep(1)
-			
-        return [indice, button_reset]
 
+        _BUTTON_UP = 18
+        _BUTTON_DOWN = 11
+        _BUTTON_RESET = 12
 
-    def get_weight(self):
-	#Definindo os pinos da celula de carga 1:
-	DAT =15
-	CLK=16
-	#Definindo os pinos da celula de carga 2:
-	DAT2 = 13
-	CLK2 = 8
-	#Contadores das celulas 1 e 2, respectivamente:
-	num=0
-	num2=0
-	#Definindo pinos como saida:
-	gpio.setup(CLK, gpio.OUT)
-	gpio.setup(CLK2,gpio.OUT)
-	#Funcao da leitura da celula de carga 2:
-	def weight2():
-  		i=0
-  		num2=0
-  		gpio.setup(DAT2, gpio.OUT)
-  		gpio.output(DAT2,1)
-  		gpio.output(CLK2,0)
-  		gpio.setup(DAT2, gpio.IN)
+        # define inputs
+        GPIO.setup(_BUTTON_UP, GPIO.IN)
+        GPIO.setup(_BUTTON_DOWN, GPIO.IN)
+        GPIO.setup(_BUTTON_RESET, GPIO.IN)
 
-  		while gpio.input(DAT2) == 1:
-      			i=0
-  		for i in range(24):
-        		gpio.output(CLK2,1)
-        		num2 = num2<<1
-			
-        		gpio.output(CLK2,0)
-        		if gpio.input(DAT2) == 0:
-            			num2 = num2 + 1
-  		gpio.output(CLK2,1)
- 		
-  		num2 = num2^0x800000
-  		gpio.output(CLK2,0)
-  		wei2 = 0
-  		wei2 = ((num2)/1406)
- 
-  		PESO2=(((wei2-5943)/15))
-  		print PESO2,"kg"
-  		time.sleep(0.5)
+        if GPIO.input(_BUTTON_UP) == 1:
+            time.sleep(BUTTONS_DEBOUNCE)
+            self.power_level += 1
+            if (self.power_level > 4):
+                self.power_level = 0
 
-        #Funcao da leitura da celula de carga 1:
-	def weight():
-  		i=0
-  		num=0
-  		gpio.setup(DAT, gpio.OUT)
-  		gpio.output(DAT,1)
-  		gpio.output(CLK,0)
-  		gpio.setup(DAT, gpio.IN)
+        if GPIO.input(_BUTTON_DOWN) == 1:
+            time.sleep(BUTTONS_DEBOUNCE)
+            self.power_level -= 1
+            if (self.power_level < 0):
+                self.power_level = 0
 
-  		while gpio.input(DAT) == 1:
-      			i=0
-  		for i in range(24):
-        		gpio.output(CLK,1)
-        		num = num<<1
+        if GPIO.input(_BUTTON_RESET) == 1:
+            button_reset = 1
 
-        		gpio.output(CLK,0)
+        return [self.power_level, button_reset]
 
-        	if gpio.input(DAT) == 0:
-            		num=num+1
-			gpio.output(CLK,1)
- 
-  			num=num^0x800000
- 
-  		gpio.output(CLK,0)
-  		wei = 0
-  		wei = ((num)/1406)
-  			
-  
-  		PESO=(((wei-5943)/15))
-  		print PESO,"kg"
-  		time.sleep(0.5)
- 	
-	#Verificar local certo de colocar essa conta
-	P_medio = 0
-	P_medio = PESO2 + PESO
-	F = 0
-	angle = 45
-	F = P_medio*9.81*0.7071
-	#calculo da energia
-	#verificar t como variável global
-	Pot_final = 0
-	Pot_final = E/t 
-	
-        return F
+    def _get_normalized_weight(self, dat, clk):
+        GPIO.setup(clk, GPIO.OUT)
 
-     
-     def Controller_weigth(self,button_data):
+        counter = 0
+        GPIO.setup(dat, GPIO.OUT)
+        GPIO.output(dat, 1)
+        GPIO.output(clk, 0)
+        GPIO.setup(dat, GPIO.IN)
 
-	indice = button_data[0]
-        #button_decr = button_data[1]
-        reset = button_data[1]
-        
-	#Define os pinos dos reles como saida- Modulo 1
-        GPIO.setup(37, GPIO.OUT)
-        GPIO.setup(35, GPIO.OUT)
-        GPIO.setup(33, GPIO.OUT)
-        GPIO.setup(31, GPIO.OUT)
-        #Define os pinos dos reles como saida - Modulo 2
-        #GPIO.setup(40, GPIO.OUT)
-        #GPIO.setup(38, GPIO.OUT)
-        #GPIO.setup(36, GPIO.OUT)
-        #GPIO.setup(32, GPIO.OUT) 
-	
-	#Inicio-todos os reles desligados - Modulo 1
-        GPIO.output(37,1)
-        GPIO.output(35,1)
-        GPIO.output(33,1)
-        GPIO.output(31,1)
-        #Inicio- todos os reles desligados - Modulo 2
-        #GPIO.output(40,1)
-        #GPIO.output(38,1)
-        #GPIO.output(36,1)
-        #GPIO.output(32,1)
-	
-	
-	if indice == 0:
-		GPIO.setup(37, GPIO.OUT)
-        	GPIO.setup(35, GPIO.OUT)
-        	GPIO.setup(33, GPIO.OUT)
-        	GPIO.setup(31, GPIO.OUT)
-	
-	#Colocar aqui parte do código que indica botão Plus_click
-	if indice  == 1:
+        while GPIO.input(dat):
+            pass
 
-		GPIO.output(35,1)
-                GPIO.output(33,1)
-                GPIO.output(31,1)
+        for _ in range(24):
+            GPIO.output(clk, 1)
+            counter = counter << 1
 
-        	GPIO.output(37,0)
-	       	#GPIO.output(32,0)
+            GPIO.output(clk, 0)
+            if GPIO.input(dat) == 0:
+                counter += 1
 
-       	if indice == 2:
+        GPIO.output(clk, 1)
+        counter ^= 0x800000
+        GPIO.output(clk, 0)
+        weight = ((counter)/1406)
+        normalized_weight = (((weight - 5943)/15))
+        return normalized_weight
 
-	       	GPIO.output(37,1)
-        	GPIO.output(33,1)
-        	GPIO.output(31,1)
+    def _turn(self, pins, state):
+        if isinstance(pins, list):
+            for i in pins:
+                GPIO.output(i, state)
+        else:
+            GPIO.output(i, state)
 
-	       	#GPIO.output(32, 1)
-           	GPIO.output(35, 0)
-           	#GPIO.output(36, 0)
+    def update_weigth(self, button_data):
+        _ON = 0
+        _OFF = 1
+        power_level, = button_data
 
-       	if indice == 3:
+        RELAYS_PINS = [37, 35, 33, 31]
 
-		GPIO.output(37,1)
-        	GPIO.output(35,1)
-        	GPIO.output(31,1)
+        # setup relays output pins
+        for relay_pin in RELAYS_PINS:
+            GPIO.setup(relay_pin, GPIO.OUT)
 
-           	#GPIO.output(36, 1)  
-           	GPIO.output(33, 0)
-           	#GPIO.output(38, 0)
-		
-       	if indice == 4:
-
-		GPIO.output(37,1)
-        	GPIO.output(35,1)
-        	GPIO.output(33,1)
-
-           	#GPIO.output( 38, 1)
-           	GPIO.output(31,0)
-           	#GPIO.output(40,0)
-
-       	if indice > 4:
-		indice = 1
-
-       
-	
-   
+        self._turn(RELAYS_PINS, _OFF)
+        if power_level > 0 and power_level <= 4:
+            self._turn(RELAYS_PINS[power_level - 1], _ON)
