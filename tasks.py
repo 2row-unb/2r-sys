@@ -31,6 +31,13 @@ def run(ctx, instance=None, log='WARNING'):
 
 
 @task
+def flask(ctx, port='0.0.0.0'):
+    import os
+    os.environ['FLASK_APP'] = 'src/api/api.py'
+    ctx.run(f'flask run -h {port}')
+
+
+@task
 def faker(ctx, mqtt=False, timer=0.3, shot=False):
     import time
     from src.faker.fake_data import data_generator
