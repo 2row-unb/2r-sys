@@ -20,7 +20,7 @@ class Kernel(gabby.Gabby):
         self.power_level = 0
 
     def transform(self, message):
-        if message.belongs_to('esp_kernel'):
+        if message.topic == 'esp_kernel':
             logging.debug(
                 f"Received message, data: {message.payload.decode('utf-8')}")
             imu_data = [float(x) for x in
@@ -28,12 +28,14 @@ class Kernel(gabby.Gabby):
 
             buttons_info = self.get_buttons()
             weight_info = self.get_weight()
-            time_info = time.time()
-            data = [*imu_data, time_info, *buttons_info, weight_info]
+            time_info = int(time.time())
+            data = [*imu_data, weight_info, time_info, *buttons_info]
             return [gabby.Message(data, self.output_topics)]
 
-        if message.belongs_to('transmitter_kernel'):
-            logging.info(f'Received message from transmitter: {message.data}')
+        else:
+            logging.info(f'Received message from controller')
+            # [FIXME]
+            return []
 
             button_data = message.data
             self.update_weigth(button_data)
@@ -67,22 +69,11 @@ class Kernel(gabby.Gabby):
         GPIO.setup(_BUTTON_DOWN, GPIO.IN)
         GPIO.setup(_BUTTON_RESET, GPIO.IN)
 
-        if GPIO.input(_BUTTON_UP) == 1:
-            time.sleep(BUTTONS_DEBOUNCE)
-            self.power_level += 1
-            if (self.power_level > 4):
-                self.power_level = 0
-
-        if GPIO.input(_BUTTON_DOWN) == 1:
-            time.sleep(BUTTONS_DEBOUNCE)
-            self.power_level -= 1
-            if (self.power_level < 0):
-                self.power_level = 0
-
-        if GPIO.input(_BUTTON_RESET) == 1:
-            button_reset = 1
-
-        return [self.power_level, button_reset]
+        return [
+            GPIO.input(_BUTTON_UP),
+            GPIO.input(_BUTTON_DOWN),
+            GPIO.input(_BUTTON_RESET),
+        ]
 
     def _get_normalized_weight(self, dat, clk):
         GPIO.setup(clk, GPIO.OUT)
