@@ -18,7 +18,8 @@ class Processor(gabby.Gabby):
     def transform(self, message):
         logging.info(f'Transforming data: {message.data}')
 
-        raw_data = message.data
+        raw_data = message.data[:18]
+        weight, timestamp = message.data[18:]
 
         self.AHRS_update(raw_data)
 
@@ -29,6 +30,7 @@ class Processor(gabby.Gabby):
 
         mag = raw_data[6:9]
         matrix.extend(mag)
+        matrix.extend([weight, timestamp])
 
         return [gabby.Message(matrix, self.output_topics)]
 

@@ -16,14 +16,14 @@ class Kernel(gabby.Gabby):
         weight_info = self.get_weight()
         time_info = self.get_time()
 
-        data = [*imu_data, time_info, *buttons_info, weight_info]
+        data = [*imu_data, weight_info, time_info, *buttons_info]
         return [gabby.Message(data, self.output_topics)]
 
     def get_time(self):
-        return 12938712983712.12
+        return 129387134
 
     def get_buttons(self):
-        return [1.0, 0.0, 1.0]
+        return [1, 0, 1]
 
     def get_weight(self):
         return 13255.0

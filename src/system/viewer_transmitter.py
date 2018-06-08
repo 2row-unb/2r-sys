@@ -26,7 +26,7 @@ class ViewerTransmitter(gabby.Gabby):
         logging.debug("Sending http request to Viewer")
         try:
             requests.post(VIEWER_URL, data={'values': data})
-        except:
+        except Exception:
             logging.error("Failed sending message to Viewer")
         else:
             logging.debug("Success sending message to Viewer")
