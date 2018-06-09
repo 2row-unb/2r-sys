@@ -1,17 +1,19 @@
 """
 Kernel module is responsible to handle IMUs and Strain Gage
 """
-
 import gabby
 import logging
-import RPi.GPIO as GPIO
 import time
 
 from .config.settings import BUTTONS_DEBOUNCE
 
-
-GPIO.setwarnings(False)
-GPIO.setmode(GPIO.BOARD)
+try:
+    import RPi.GPIO as GPIO
+except:
+    logging.error("Failed importing RPi.GPIO module")
+else:
+    GPIO.setwarnings(False)
+    GPIO.setmode(GPIO.BOARD)
 
 
 class Kernel(gabby.Gabby):
@@ -58,6 +60,7 @@ class Kernel(gabby.Gabby):
 
         return power
 
+    @rpi_mock([11.0, 12.0, 13.0])
     def get_buttons(self):
         button_reset = 0
 
@@ -76,6 +79,7 @@ class Kernel(gabby.Gabby):
             GPIO.input(_BUTTON_RESET),
         ]
 
+    @rpi_mock(10.0)
     def _get_normalized_weight(self, dat, clk):
         GPIO.setup(clk, GPIO.OUT)
 
@@ -103,6 +107,7 @@ class Kernel(gabby.Gabby):
         normalized_weight = (((weight - 5943)/15))
         return normalized_weight
 
+    @rpi_mock
     def _turn(self, pins, state):
         if isinstance(pins, list):
             for i in pins:
@@ -110,6 +115,7 @@ class Kernel(gabby.Gabby):
         else:
             GPIO.output(pins, state)
 
+    @rpi_mock
     def update_weigth(self, button_data):
         _ON = 0
         _OFF = 1
