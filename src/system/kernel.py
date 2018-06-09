@@ -18,6 +18,7 @@ class Kernel(gabby.Gabby):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.power_level = 0
+        self.setup_pins = False
 
     def transform(self, message):
         if message.topic == 'esp_kernel':
@@ -33,9 +34,9 @@ class Kernel(gabby.Gabby):
             return [gabby.Message(data, self.output_topics)]
 
         else:
+            message = gabby.Message.decode(
+                message.payload, self.input_topics.filter_by(name='controller_kernel'))
             logging.info(f'Received message from controller')
-            # [FIXME]
-            return []
 
             button_data = message.data
             self.update_weigth(button_data)
@@ -107,7 +108,7 @@ class Kernel(gabby.Gabby):
             for i in pins:
                 GPIO.output(i, state)
         else:
-            GPIO.output(i, state)
+            GPIO.output(pins, state)
 
     def update_weigth(self, button_data):
         _ON = 0
@@ -117,8 +118,10 @@ class Kernel(gabby.Gabby):
         RELAYS_PINS = [37, 35, 33, 31]
 
         # setup relays output pins
-        for relay_pin in RELAYS_PINS:
-            GPIO.setup(relay_pin, GPIO.OUT)
+        if self.setup_pins == False:
+            for relay_pin in RELAYS_PINS:
+                GPIO.setup(relay_pin, GPIO.OUT)
+            self.setup_pins = True
 
         self._turn(RELAYS_PINS, _OFF)
         if power_level > 0 and power_level <= 4:
