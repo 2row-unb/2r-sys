@@ -1,10 +1,19 @@
 """
 Decorators module
 """
-from config.settings import RPI_MOCK
+from .config.settings import RPI_MOCK
+from functools import wraps
 
 
-def rpi_mock(alternative_return):
-    def _(func):
-        return func
-    return _
+class rpi_mock:
+    def __init__(self, alternative_return):
+        self.return_ = alternative_return
+
+    def __call__(self, func, *args, **kwargs):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if RPI_MOCK:
+                return self.return_
+            else:
+                return func(*args, **kwargs)
+        return wrapper
