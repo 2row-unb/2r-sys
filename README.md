@@ -15,15 +15,16 @@ pip3 install -r requirements.txt
 
 ### Run
 
+### RaspberryPi
 To run 2rsystem, execute:
 
 ```bash
-make run
+./run.sh
 ```
 
-It will open a splitted tmux with all 2RSystem nodes and an instance of Mosquitto MQTT server.
+It will open a splitted tmux with all 2RSystem nodes. Make sure Mosquitto server is running before.
 
-You can run without tmux, just execute:
+Also, you can run without tmux.
 
 ```bash
 inv run -l info
@@ -43,7 +44,19 @@ inv run -i transmitter -l info
 inv run -i processor -l info
 ```
 
-`WARNING`: make sure there is an instance of the Mosquitto running.
+### Mock Raspberry on any Linux
+
+If you try to execute 2RSystem out of a Raspberry, it'll crash. You can simulate the Raspberry behavior with the `rpi-mock` flag.
+
+```bash
+./run.sh --rpi-mock
+```
+
+Also, you can execute `inv run` with the same flag. 
+
+```bash
+inv run -i kernel -l info --rpi-mock
+```
 
 ### Tests
 
