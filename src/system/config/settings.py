@@ -2,10 +2,12 @@
 Global configurations of 2RSystem
 """
 
+import os
+
 MOSQUITTO_URL = 'localhost'
 MOSQUITTO_PORT = 1883
 MOSQUITTO_KEEPALIVE = 60
 
-VIEWER_URL = 'http://viewer.url'
+VIEWER_API_URL = 'http://localhost:5000'
 
-BUTTONS_DEBOUNCE = 0.3
+RPI_MOCK = os.environ.get('RPI_MOCK', 'false') == 'true'
