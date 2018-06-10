@@ -4,7 +4,7 @@ Transmitter for 2RE KERNEL module
 import logging
 import gabby
 import requests
-from .config.settings import VIEWER_URL
+from .config.settings import VIEWER_API_URL
 
 
 class ViewerTransmitter(gabby.Gabby):
@@ -25,7 +25,7 @@ class ViewerTransmitter(gabby.Gabby):
         """
         logging.debug("Sending http request to Viewer")
         try:
-            requests.post(VIEWER_URL, data={'values': data})
+            requests.post(VIEWER_API_URL, data={'values': data})
         except Exception:
             logging.error("Failed sending message to Viewer")
         else:
