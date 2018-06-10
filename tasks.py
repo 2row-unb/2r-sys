@@ -1,7 +1,11 @@
 import logging
 from invoke import task
 
-from src import system
+
+def _mockable(func, *args, **kwargs):
+    """
+    RaspberryPi mockable decorator
+    """
 
 
 def _setup_logging(level):
@@ -22,11 +26,17 @@ def install(ctx):
 
 
 @task
-def run(ctx, instance=None, log='WARNING'):
+def run(ctx, instance=None, rpi_mock=False, log='WARNING'):
     """
     Task to run 2RSystem
     """
     _setup_logging(log)
+
+    if rpi_mock:
+        import os
+        os.environ['RPI_MOCK'] = 'true'
+
+    from src import system
     system.start(instance)
 
 
