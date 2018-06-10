@@ -27,34 +27,47 @@ class Controller(gabby.Gabby):
         elif message.belongs_to('kernel_controller'):
             logging.info('Received message from Kernel')
             return [
-                self.process_views(message.data[:20]),
-                self.process_buttons(message.data[:13]),
+                *self.process_views(message.data[:20]),
+                *self.process_buttons(message.data[:13]),
             ]
 
         return []
 
     def process_views(self, data):
-        return gabby.Message(
-            data,
-            topics=(
-                self.output_topics
-                .filter_by(name='controller_processor')
+        return [
+            gabby.Message(
+                data,
+                topics=(
+                    self
+                    .output_topics
+                    .filter_by(
+                        name='controller_processor'
+                    )
+                )
             )
-        )
+        ]
 
     def process_buttons(self, buttons):
+        old_power_level = self._power_level
         new_power_level = self.process_power_level(*buttons[:2])
-        return gabby.Message(
-            (new_power_level,),
-            topics=(
-                self.output_topics
-                .filter_by(name='controller_kernel')
-            )
-        )
+        if old_power_level != new_power_level:
+            return [
+                gabby.Message(
+                    (new_power_level,),
+                    topics=(
+                        self
+                        .output_topics
+                        .filter_by(
+                            name='controller_kernel'
+                        )
+                    )
+                )
+            ]
+        else:
+            return []
 
     def process_power_level(self, button_up, button_down):
-        if button_up and self._power_level < 4:
-            self._power_level += 1
-        elif button_down and self._power_level > 0:
-            self._power_level -= 1
+        power_level = self._power_level
+        power_level += button_up - button_down
+        self._power_level = power_level % 4 if power_level >= 0 else 0
         return self._power_level
