@@ -67,7 +67,7 @@ class Kernel(gabby.Gabby):
 
         return power
 
-    @rpi_mock([11.0, 12.0, 13.0])
+    @rpi_mock([1, 1, 1])
     def get_buttons(self):
         # [FIXME] implements button debounce
         _BUTTON_UP = 18
