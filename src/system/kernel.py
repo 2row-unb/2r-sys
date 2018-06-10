@@ -4,6 +4,7 @@ Kernel module is responsible to handle IMUs and Strain Gage
 import gabby
 import logging
 import time
+import random
 
 from .decorators import rpi_mock
 from .config.settings import RPI_MOCK
@@ -11,7 +12,6 @@ from .config.settings import RPI_MOCK
 try:
     import RPi.GPIO as GPIO
 except ModuleNotFoundError:
-    logging.error("Failed importing RPi.GPIO module")
     assert RPI_MOCK is True
 else:
     GPIO.setwarnings(False)
@@ -26,31 +26,40 @@ class Kernel(gabby.Gabby):
 
     def transform(self, message):
         logging.info(f'Received message from {message.topic}')
-
         if message.topic == 'esp_kernel':
-            logging.debug(f"Data: {message.payload.decode('utf-8')}")
-            imu_data = [float(x) for x in
-                        message.payload.decode('utf-8').split(';')]
-
-            buttons_info = self.get_buttons()
-            weight_info = self.get_weight()
-            time_info = int(time.time())
-            data = [*imu_data, weight_info, time_info, *buttons_info]
-
-            return [gabby.Message(data, self.output_topics)]
-
+            return self.work_on_message_from_esp(message)
         else:
-            logging.info(f'Received message from controller')
-            message = gabby.Message.decode(
-                message.payload,
-                self.input_topics.filter_by(name='controller_kernel')
-            )
-            logging.debug(f'Data: {message.data}')
+            return self.work_on_message_from_controller(message)
 
-            button_data = message.data
-            self.update_weigth(button_data)
+    def work_on_message_from_esp(self, message):
+        """
+        Method to work on data received from ESP (2RE-Suit)
+        """
+        logging.debug(f"Data: {message.payload.decode('utf-8')}")
+        imu_data = [float(x) for x in
+                    message.payload.decode('utf-8').split(';')]
 
-            return []
+        buttons_info = self.get_buttons()
+        weight_info = self.get_weight()
+        time_info = time.time()
+        data = [*imu_data, weight_info, time_info, *buttons_info]
+
+        return [gabby.Message(data, self.output_topics)]
+
+    def work_on_message_from_controller(self, message):
+        """
+        Method to work on data received from ESP (2RE-Suit)
+        """
+        message = gabby.Message.decode(
+            message.payload,
+            self.input_topics.filter_by(name='controller_kernel')
+        )
+        logging.debug(f'Data: {message.data}')
+
+        button_data = message.data
+        self.update_weigth(button_data)
+
+        return []
 
     def get_weight(self):
         DAT1 = 15
@@ -67,7 +76,7 @@ class Kernel(gabby.Gabby):
 
         return power
 
-    @rpi_mock([1, 1, 1])
+    @rpi_mock(lambda: [random.randint(0, 1), random.randint(0, 1), 1])
     def get_buttons(self):
         # [FIXME] implements button debounce
         _BUTTON_UP = 18
@@ -85,7 +94,7 @@ class Kernel(gabby.Gabby):
             GPIO.input(_BUTTON_RESET),
         ]
 
-    @rpi_mock(10.0)
+    @rpi_mock(lambda: random.random() * 80)
     def _get_normalized_weight(self, dat, clk):
         counter = 0
         GPIO.setup(clk, GPIO.OUT)
@@ -127,9 +136,11 @@ class Kernel(gabby.Gabby):
         _OFF = 1
         power_level, = button_data
 
+        logging.warning(f'Changing power level to {power_level}')
+
         self._turn(self.RELAYS_PINS, _OFF)
-        if power_level > 0 and power_level <= 4:
-            self._turn(self.RELAYS_PINS[power_level - 1], _ON)
+        if power_level >= 0 and power_level < 3:
+            self._turn(self.RELAYS_PINS[power_level], _ON)
 
     @rpi_mock
     def _setup_relays(self, pins):
