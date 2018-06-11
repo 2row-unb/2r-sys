@@ -16,8 +16,6 @@ class Controller(gabby.Gabby):
         self._power_level = 0
 
     def transform(self, message):
-        logging.info(f'Transforming data {message.data}')
-
         if self.is_message_up_to_date(message):
             if message.belongs_to('processor_controller'):
                 logging.info('Received message from Processor')
@@ -39,8 +37,12 @@ class Controller(gabby.Gabby):
     def is_message_up_to_date(self, message):
         current_time = time.time()
         time_delta = current_time - message.data[-1]
-        logging.debug(f'Time delta: {time_delta}')
-        return time_delta < 0.1
+        logging.debug(
+            f'Time msg: {message.data[-1]} | '
+            f'Time now: {current_time} | '
+            f'Time delta: {time_delta}'
+        )
+        return time_delta < 0.04  # 25 frames per second
 
     def process_views(self, data):
         return [

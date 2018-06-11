@@ -5,32 +5,32 @@ import gabby
 
 
 _topics = gabby.TopicCollection(
-    # (float)    1 - 18 : IMU data.
-    gabby.Topic('esp_kernel', 'f'*18),
+    # (double)    1 - 18 : IMU data.
+    gabby.Topic('esp_kernel', 'd'*18),
 
-    # (float)    1 - 18 : IMU data
-    # (float)   19      : Power
+    # (double)    1 - 18 : IMU data
+    # (double)   19      : Power
     # (int)     20 - 22 : Buttons
-    # (float)   23      : Timestamp
-    gabby.Topic('kernel_controller', 'f'*19 + 'i'*3 + 'f'),
+    # (double)   23      : Timestamp
+    gabby.Topic('kernel_controller', 'd'*19 + 'i'*3 + 'd'),
 
     # (int)      1      : Weight Level
     gabby.Topic('controller_kernel', 'i'),
 
-    # (float)    1 - 15 : Angles
-    # (float)    16     : Power
-    # (float)    17     : Timestamp
-    gabby.Topic('controller_transmitter', 'f'*17),
+    # (double)    1 - 15 : Angles
+    # (double)    16     : Power
+    # (double)    17     : Timestamp
+    gabby.Topic('controller_transmitter', 'd'*17),
 
-    # (float)    1 - 18 : IMU Data
-    # (float)   19      : Weight
-    # (float)   20      : Timestamp
-    gabby.Topic('controller_processor', 'f'*20),
+    # (double)    1 - 18 : IMU Data
+    # (double)   19      : Weight
+    # (double)   20      : Timestamp
+    gabby.Topic('controller_processor', 'd'*20),
 
-    # (float)    1 - 15 : Angles
-    # (float)   16      : Weight
-    # (float)   17      : Timestamp
-    gabby.Topic('processor_controller', 'f'*17),
+    # (double)    1 - 15 : Angles
+    # (double)   16      : Weight
+    # (double)   17      : Timestamp
+    gabby.Topic('processor_controller', 'd'*17),
 )
 
 
