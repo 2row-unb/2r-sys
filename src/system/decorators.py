@@ -5,17 +5,17 @@ from .config.settings import RPI_MOCK
 from functools import wraps
 
 
-class rpi_mock:
-    def __init__(self, alternative=lambda *a, **kw: None, *args, **kwargs):
-        self.alternative = alternative
-        self.args = args
-        self.kwargs = kwargs
+def rpi_mock(alternative=lambda *a, **kw: None, *args, **kwargs):
+        alternative = alternative
+        alt_args = args
+        alt_kwargs = kwargs
 
-    def __call__(self, func, *args, **kwargs):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            if RPI_MOCK:
-                return self.alternative(*self.args, *self.kwargs)
-            else:
-                return func(*args, **kwargs)
-        return wrapper
+        def decorator(func):
+            @wraps(func)
+            def wrapper(*args, **kwargs):
+                if RPI_MOCK:
+                    return alternative(*alt_args, *alt_kwargs)
+                else:
+                    return func(*args, **kwargs)
+            return wrapper
+        return decorator

@@ -29,6 +29,7 @@ class Kernel(gabby.Gabby):
         if message.topic == 'esp_kernel':
             return self.work_on_message_from_esp(message)
         else:
+            logging.warning('CHEGOU MESSAGEM')
             return self.work_on_message_from_controller(message)
 
     def work_on_message_from_esp(self, message):
@@ -122,7 +123,7 @@ class Kernel(gabby.Gabby):
 
         return normalized_weight
 
-    @rpi_mock
+    @rpi_mock()
     def _turn(self, pins, state):
         if isinstance(pins, list):
             for i in pins:
@@ -130,7 +131,7 @@ class Kernel(gabby.Gabby):
         else:
             GPIO.output(pins, state)
 
-    @rpi_mock
+    @rpi_mock()
     def update_weigth(self, button_data):
         _ON = 0
         _OFF = 1
@@ -142,7 +143,7 @@ class Kernel(gabby.Gabby):
         if power_level >= 0 and power_level < 3:
             self._turn(self.RELAYS_PINS[power_level], _ON)
 
-    @rpi_mock
+    @rpi_mock()
     def _setup_relays(self, pins):
         self.RELAYS_PINS = pins
         for relay_pin in self.RELAYS_PINS:
