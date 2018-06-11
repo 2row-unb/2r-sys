@@ -42,7 +42,7 @@ class Kernel(gabby.Gabby):
         buttons_info = self.get_buttons()
         weight_info = self.get_weight()
         time_info = time.time()
-        data = [*imu_data, weight_info, time_info, *buttons_info]
+        data = [*imu_data, weight_info, *buttons_info, time_info]
 
         return [gabby.Message(data, self.output_topics)]
 

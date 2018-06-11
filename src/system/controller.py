@@ -3,6 +3,7 @@
 """
 import logging
 import gabby
+import time
 
 
 class Controller(gabby.Gabby):
@@ -17,21 +18,29 @@ class Controller(gabby.Gabby):
     def transform(self, message):
         logging.info(f'Transforming data {message.data}')
 
-        if message.belongs_to('processor_controller'):
-            logging.info('Received message from Processor')
-            message.topics = self.output_topics.filter_by(
-                name='controller_transmitter'
-            )
-            return [message]
+        if self.is_message_up_to_date(message):
+            if message.belongs_to('processor_controller'):
+                logging.info('Received message from Processor')
+                message.topics = self.output_topics.filter_by(
+                    name='controller_transmitter'
+                )
+                return [message]
 
-        elif message.belongs_to('kernel_controller'):
-            logging.info('Received message from Kernel')
-            return [
-                *self.process_views(message.data[:20]),
-                *self.process_buttons(message.data[:13]),
-            ]
+            elif message.belongs_to('kernel_controller'):
+                logging.info('Received message from Kernel')
+                return [
+                    *self.process_views(
+                        [*message.data[:19], message.data[-1]]),
+                    *self.process_buttons(message.data[19:22]),
+                ]
 
         return []
+
+    def is_message_up_to_date(self, message):
+        current_time = time.time()
+        time_delta = current_time - message.data[-1]
+        logging.debug(f'Time delta: {time_delta}')
+        return time_delta < 0.1
 
     def process_views(self, data):
         return [

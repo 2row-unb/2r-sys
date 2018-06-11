@@ -10,9 +10,9 @@ _topics = gabby.TopicCollection(
 
     # (float)    1 - 18 : IMU data
     # (float)   19      : Power
-    # (float)   20      : Timestamp
-    # (int)     21 - 23 : Buttons
-    gabby.Topic('kernel_controller', 'f'*20 + 'i'*3),
+    # (int)     20 - 22 : Buttons
+    # (float)   23      : Timestamp
+    gabby.Topic('kernel_controller', 'f'*19 + 'i'*3 + 'f'),
 
     # (int)      1      : Weight Level
     gabby.Topic('controller_kernel', 'i'),
@@ -24,7 +24,7 @@ _topics = gabby.TopicCollection(
 
     # (float)    1 - 18 : IMU Data
     # (float)   19      : Weight
-    # (float)     20      : Timestamp
+    # (float)   20      : Timestamp
     gabby.Topic('controller_processor', 'f'*20),
 
     # (float)    1 - 15 : Angles
