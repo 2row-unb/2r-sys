@@ -25,7 +25,14 @@ class ViewerTransmitter(gabby.Gabby):
         """
         logging.debug("Sending http request to Viewer")
         try:
-            requests.post(VIEWER_API_URL, data={'values': data})
+            headers = {
+                'Content-type': 'application/json'
+            }
+            requests.post(
+                VIEWER_API_URL,
+                json={'values': data},
+                headers=headers
+            )
         except Exception:
             logging.error("Failed sending message to Viewer")
         else:
