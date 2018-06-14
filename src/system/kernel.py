@@ -19,17 +19,11 @@ else:
 
 
 class Kernel(gabby.Gabby):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.power_level = 0
-        self._setup_relays([37, 35, 33, 31])
-
     def transform(self, message):
         logging.info(f'Received message from {message.topic}')
         if message.topic == 'esp_kernel':
             return self.work_on_message_from_esp(message)
-        else:
-            return self.work_on_message_from_controller(message)
+        return []
 
     def work_on_message_from_esp(self, message):
         """
@@ -39,27 +33,16 @@ class Kernel(gabby.Gabby):
         imu_data = [float(x) for x in
                     message.payload.decode('utf-8').split(';')]
 
-        buttons_info = self.get_buttons()
         weight_info = self.get_weight()
         time_info = time.time()
-        data = [*imu_data, weight_info, *buttons_info, time_info]
+        controller_data = [*imu_data, weight_info, time_info]
 
-        return [gabby.Message(data, self.output_topics)]
-
-    def work_on_message_from_controller(self, message):
-        """
-        Method to work on data received from ESP (2RE-Suit)
-        """
-        message = gabby.Message.decode(
-            message.payload,
-            self.input_topics.filter_by(name='controller_kernel')
-        )
-        logging.debug(f'Data: {message.data}')
-
-        button_data = message.data
-        self.update_weigth(button_data)
-
-        return []
+        return [
+            gabby.Message(
+                controller_data,
+                self.output_topics.filter_by(name='kernel_controller')
+            )
+        ]
 
     def get_weight(self):
         DAT1 = 15
@@ -75,24 +58,6 @@ class Kernel(gabby.Gabby):
         power = total_weight*9.81*0.7071
 
         return power
-
-    @rpi_mock(lambda: [random.randint(0, 1), random.randint(0, 1), 1])
-    def get_buttons(self):
-        # [FIXME] implements button debounce
-        _BUTTON_UP = 18
-        _BUTTON_DOWN = 11
-        _BUTTON_RESET = 12
-
-        # define inputs
-        GPIO.setup(_BUTTON_UP, GPIO.IN)
-        GPIO.setup(_BUTTON_DOWN, GPIO.IN)
-        GPIO.setup(_BUTTON_RESET, GPIO.IN)
-
-        return [
-            GPIO.input(_BUTTON_UP),
-            GPIO.input(_BUTTON_DOWN),
-            GPIO.input(_BUTTON_RESET),
-        ]
 
     @rpi_mock(lambda: random.random() * 80)
     def _get_normalized_weight(self, dat, clk):
@@ -122,28 +87,3 @@ class Kernel(gabby.Gabby):
 
         return normalized_weight
 
-    @rpi_mock
-    def _turn(self, pins, state):
-        if isinstance(pins, list):
-            for i in pins:
-                GPIO.output(i, state)
-        else:
-            GPIO.output(pins, state)
-
-    @rpi_mock
-    def update_weigth(self, button_data):
-        _ON = 0
-        _OFF = 1
-        power_level, = button_data
-
-        logging.warning(f'Changing power level to {power_level}')
-
-        self._turn(self.RELAYS_PINS, _OFF)
-        if power_level >= 0 and power_level < 3:
-            self._turn(self.RELAYS_PINS[power_level], _ON)
-
-    @rpi_mock
-    def _setup_relays(self, pins):
-        self.RELAYS_PINS = pins
-        for relay_pin in self.RELAYS_PINS:
-            GPIO.setup(relay_pin, GPIO.OUT)

@@ -20,17 +20,16 @@ class Controller(gabby.Gabby):
             if message.belongs_to('processor_controller'):
                 logging.info('Received message from Processor')
                 message.topics = self.output_topics.filter_by(
-                    name='controller_transmitter'
-                )
+                                    name='controller_transmitter')
                 return [message]
 
             elif message.belongs_to('kernel_controller'):
                 logging.info('Received message from Kernel')
-                return [
-                    *self.process_views(
-                        [*message.data[:19], message.data[-1]]),
-                    *self.process_buttons(message.data[19:22]),
-                ]
+                return self.process_views(message.data)
+
+            elif message.belongs_to('kernel_controller_buttons'):
+                logging.info('Received message from Kernel')
+                return self.process_buttons(message.data)
 
         return []
 

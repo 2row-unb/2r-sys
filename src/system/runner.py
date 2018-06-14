@@ -9,6 +9,7 @@ from .controller import Controller
 from .viewer_transmitter import ViewerTransmitter
 from .processor import Processor
 from .kernel import Kernel
+from .kernel_control import KernelControl
 from .topics import get_topics
 
 
@@ -17,18 +18,29 @@ def get_modules():
 
     return {
         'kernel': Kernel(
-            get_topics('esp_kernel', 'controller_kernel'),
+            get_topics('esp_kernel'),
             get_topics('kernel_controller'),
             False,
             *mosquitto_config
         ),
 
+        'kernelcontrol': KernelControl(
+            get_topics('controller_kernelcontrol'),
+            get_topics('kernelcontrol_controller'),
+            False,
+            *mosquitto_config
+        ),
+
         'controller': Controller(
-            get_topics('kernel_controller', 'processor_controller'),
+            get_topics(
+                'kernel_controller',
+                'kernelcontrol_controller',
+                'processor_controller'
+            ),
             get_topics(
                 'controller_transmitter',
                 'controller_processor',
-                'controller_kernel'
+                'controller_kernelcontrol'
             ),
             True,
             *mosquitto_config
