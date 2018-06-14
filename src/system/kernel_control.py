@@ -98,6 +98,6 @@ class KernelControl(gabby.Gabby):
         if state == 'input':
             GPIO.setup(pin, GPIO.IN)
         elif state == 'output':
-            GPIO.false(pin, GPIO.OUT)
+            GPIO.setup(pin, GPIO.OUT)
         else:
             raise AttributeError
