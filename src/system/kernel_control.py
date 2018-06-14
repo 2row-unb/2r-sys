@@ -25,7 +25,6 @@ class KernelControl(gabby.Gabby):
         self.power_level = 0
         self._setup_relays(37, 35, 33, 31)
         self._setup_buttons(up=18, down=11, reset=12)
-        _thread.start_new_thread(self.exec_buttons_reader, tuple())
 
     def transform(self, message):
         if message.topic == 'controller_kernelcontrol':
@@ -37,6 +36,10 @@ class KernelControl(gabby.Gabby):
             self.update_power_level(button_data)
         return []
 
+    def run(self):
+        _thread.start_new_thread(self.exec_buttons_reader, tuple())
+        super().run()
+
     @rpi_mock()
     def _turn(self, pins, state):
         if isinstance(pins, list):
@@ -46,8 +49,8 @@ class KernelControl(gabby.Gabby):
             GPIO.output(pins, state)
 
     def update_power_level(self, button_data):
-        _ON = 0
-        _OFF = 1
+        _ON = 1
+        _OFF = 0
         power_level, = button_data
 
         logging.warning(f'Changing power level to {power_level}')
@@ -59,8 +62,12 @@ class KernelControl(gabby.Gabby):
     def exec_buttons_reader(self):
         for new_state in self.get_buttons():
             self.send(
-                gabby.Message(new_state,
-                self.output_topics.filter_by(name='kernelcontrol_controller'))
+                gabby.Message(
+                    new_state,
+                    self.output_topics.filter_by(
+                        name='kernelcontrol_controller'
+                    )
+                )
             )
 
     def get_buttons(self):
@@ -93,4 +100,4 @@ class KernelControl(gabby.Gabby):
         elif state == 'output':
             GPIO.false(pin, GPIO.OUT)
         else:
-            raise AttributteError
+            raise AttributeError
