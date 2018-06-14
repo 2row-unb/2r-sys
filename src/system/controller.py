@@ -79,5 +79,10 @@ class Controller(gabby.Gabby):
     def process_power_level(self, button_up, button_down):
         power_level = self._power_level
         power_level += button_up - button_down
-        self._power_level = power_level % 4 if power_level >= 0 else 0
+        if power_level > 3:
+            power_level = 3
+        elif power_level < 0:
+            power_level = 0
+        self._power_level = power_level
+        logging.debug(f'Button UP: {button_up} | Button DOWN: {button_down} | Current power level: {self._power_level}')
         return self._power_level

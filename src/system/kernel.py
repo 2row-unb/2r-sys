@@ -21,28 +21,23 @@ else:
 class Kernel(gabby.Gabby):
     def transform(self, message):
         logging.info(f'Received message from {message.topic}')
+
         if message.topic == 'esp_kernel':
-            return self.work_on_message_from_esp(message)
+            logging.debug(f"Data: {message.payload.decode('utf-8')}")
+            imu_data = [float(x) for x in
+                        message.payload.decode('utf-8').split(';')]
+
+            weight_info = self.get_weight()
+            time_info = time.time()
+            controller_data = [*imu_data, weight_info, time_info]
+
+            return [
+                gabby.Message(
+                    controller_data,
+                    self.output_topics.filter_by(name='kernel_controller')
+                )
+            ]
         return []
-
-    def work_on_message_from_esp(self, message):
-        """
-        Method to work on data received from ESP (2RE-Suit)
-        """
-        logging.debug(f"Data: {message.payload.decode('utf-8')}")
-        imu_data = [float(x) for x in
-                    message.payload.decode('utf-8').split(';')]
-
-        weight_info = self.get_weight()
-        time_info = time.time()
-        controller_data = [*imu_data, weight_info, time_info]
-
-        return [
-            gabby.Message(
-                controller_data,
-                self.output_topics.filter_by(name='kernel_controller')
-            )
-        ]
 
     def get_weight(self):
         DAT1 = 15
@@ -86,4 +81,3 @@ class Kernel(gabby.Gabby):
         normalized_weight = (((weight - 5943)/15))
 
         return normalized_weight
-
