@@ -44,8 +44,8 @@ class KernelControl(gabby.Gabby):
             GPIO.output(pins, state)
 
     def update_power_level(self, button_data):
-        _ON = 1
-        _OFF = 0
+        _ON = 0
+        _OFF = 1
         power_level, = button_data
 
         logging.warning(f'Changing power level to {power_level}')
