@@ -27,7 +27,7 @@ def get_modules():
         'kernelcontrol': KernelControl(
             get_topics('controller_kernelcontrol'),
             get_topics('kernelcontrol_controller'),
-            False,
+            True,
             *mosquitto_config
         ),
 
