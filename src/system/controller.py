@@ -68,7 +68,7 @@ class Controller(gabby.Gabby):
                         self
                         .output_topics
                         .filter_by(
-                            name='controller_kernel'
+                            name='controller_kernelcontrol'
                         )
                     )
                 )
