@@ -27,13 +27,8 @@ class KernelControl(gabby.Gabby):
         self._setup_buttons(up=18, down=11, reset=12)
 
     def transform(self, message):
-        if message.topic == 'controller_kernelcontrol':
-            message = gabby.Message.decode(
-                message.payload,
-                self.input_topics.filter_by(name='controller_kernel')
-            )
-            button_data = message.data
-            self.update_power_level(button_data)
+        if message.belongs_to('controller_kernelcontrol'):
+            self.update_power_level(message.data)
         return []
 
     def run(self):
