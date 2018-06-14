@@ -27,9 +27,9 @@ class Controller(gabby.Gabby):
                 logging.info('Received message from Kernel')
                 return self.process_views(message.data)
 
-            elif message.belongs_to('kernelcontrol_controller'):
-                logging.info('Received message from Kernel Control')
-                return self.process_buttons(message.data)
+        if message.belongs_to('kernelcontrol_controller'):
+            logging.info('Received message from Kernel Control')
+            return self.process_buttons(message.data)
 
         return []
 
