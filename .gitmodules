@@ -1,0 +1,3 @@
+[submodule "mqttsn/rsmb"]
+	path = mqttsn/rsmb
+	url = https://github.com/MichalFoksa/rsmb.git
