@@ -27,8 +27,8 @@ class Controller(gabby.Gabby):
                 logging.info('Received message from Kernel')
                 return self.process_views(message.data)
 
-            elif message.belongs_to('kernel_controller_buttons'):
-                logging.info('Received message from Kernel')
+            elif message.belongs_to('kernelcontrol_controller'):
+                logging.info('Received message from Kernel Control')
                 return self.process_buttons(message.data)
 
         return []
@@ -84,5 +84,7 @@ class Controller(gabby.Gabby):
         elif power_level < 0:
             power_level = 0
         self._power_level = power_level
-        logging.debug(f'Button UP: {button_up} | Button DOWN: {button_down} | Current power level: {self._power_level}')
+        logging.debug(f'Button UP: {button_up} | '
+                      f'Button DOWN: {button_down} | '
+                      f'Current power level: {self._power_level}')
         return self._power_level

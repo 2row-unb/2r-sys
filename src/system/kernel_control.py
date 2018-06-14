@@ -2,53 +2,42 @@
 Class to handle buttons end measures made by kernel
 """
 import gabby
+import logging
+import time
+import random
+import _thread
 
 from .decorators import rpi_mock
+from .config.settings import RPI_MOCK
+
+try:
+    import RPi.GPIO as GPIO
+except ModuleNotFoundError:
+    assert RPI_MOCK is True
+else:
+    GPIO.setwarnings(False)
+    GPIO.setmode(GPIO.BOARD)
 
 
 class KernelControl(gabby.Gabby):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.power_level = 0
-        self._setup_relays([37, 35, 33, 31])
+        self._setup_relays(37, 35, 33, 31)
+        self._setup_buttons(up=18, down=11, reset=12)
+        _thread.start_new_thread(self.exec_buttons_reader, tuple())
 
     def transform(self, message):
         if message.topic == 'controller_kernelcontrol':
-            work_on_message_from_controller(message)
-
-    def work_on_message_from_controller(self, message):
-        """
-        Method to work on data received from ESP (2RE-Suit)
-        """
-        message = gabby.Message.decode(
-            message.payload,
-            self.input_topics.filter_by(name='controller_kernel')
-        )
-        logging.debug(f'Data: {message.data}')
-
-        button_data = message.data
-        self.update_power_level(button_data)
-
+            message = gabby.Message.decode(
+                message.payload,
+                self.input_topics.filter_by(name='controller_kernel')
+            )
+            button_data = message.data
+            self.update_power_level(button_data)
         return []
 
-    @rpi_mock(lambda: [random.randint(0, 1), random.randint(0, 1), 1])
-    def get_buttons(self):
-        _BUTTON_UP = 18
-        _BUTTON_DOWN = 11
-        _BUTTON_RESET = 12
-
-        # define inputs
-        GPIO.setup(_BUTTON_UP, GPIO.IN)
-        GPIO.setup(_BUTTON_DOWN, GPIO.IN)
-        GPIO.setup(_BUTTON_RESET, GPIO.IN)
-
-        return [
-            GPIO.input(_BUTTON_UP),
-            GPIO.input(_BUTTON_DOWN),
-            GPIO.input(_BUTTON_RESET),
-        ]
-
-    @rpi_mock
+    @rpi_mock()
     def _turn(self, pins, state):
         if isinstance(pins, list):
             for i in pins:
@@ -56,8 +45,7 @@ class KernelControl(gabby.Gabby):
         else:
             GPIO.output(pins, state)
 
-    @rpi_mock
-    def update_weigth(self, button_data):
+    def update_power_level(self, button_data):
         _ON = 0
         _OFF = 1
         power_level, = button_data
@@ -68,8 +56,41 @@ class KernelControl(gabby.Gabby):
         if power_level >= 0 and power_level < 3:
             self._turn(self.RELAYS_PINS[power_level], _ON)
 
-    @rpi_mock
-    def _setup_relays(self, pins):
+    def exec_buttons_reader(self):
+        for new_state in self.get_buttons():
+            self.send(
+                gabby.Message(new_state,
+                self.output_topics.filter_by(name='kernelcontrol_controller'))
+            )
+
+    def get_buttons(self):
+        while(True):
+            states = [self._read_button(b) for _, b in self.BUTTONS.items()]
+            if any(states):
+                yield states
+                time.sleep(0.6)
+            else:
+                time.sleep(0.1)
+
+    @rpi_mock(lambda: random.randint(0, 1))
+    def _read_button(self, button):
+        return GPIO.input(button)
+
+    def _setup_buttons(self, **buttons):
+        self.BUTTONS = buttons
+        for _, pin in buttons.items():
+            self._setup_pin(pin, 'input')
+
+    def _setup_relays(self, *pins):
         self.RELAYS_PINS = pins
-        for relay_pin in self.RELAYS_PINS:
-            GPIO.setup(relay_pin, GPIO.OUT)
+        for pin in self.RELAYS_PINS:
+            self._setup_pin(pin, 'output')
+
+    @rpi_mock()
+    def _setup_pin(self, pin, state):
+        if state == 'input':
+            GPIO.setup(pin, GPIO.IN)
+        elif state == 'output':
+            GPIO.false(pin, GPIO.OUT)
+        else:
+            raise AttributteError
