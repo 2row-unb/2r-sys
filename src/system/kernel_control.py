@@ -51,7 +51,7 @@ class KernelControl(gabby.Gabby):
         logging.warning(f'Changing power level to {power_level}')
 
         self._turn(self.RELAYS_PINS, _OFF)
-        if power_level >= 0 and power_level < 3:
+        if power_level >= 0 and power_level < 4:
             self._turn(self.RELAYS_PINS[power_level], _ON)
 
     def exec_buttons_reader(self):
