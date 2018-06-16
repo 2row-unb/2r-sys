@@ -6,7 +6,7 @@ import gabby
 
 from .config.settings import MOSQUITTO_URL, MOSQUITTO_PORT, MOSQUITTO_KEEPALIVE
 from .controller import Controller
-from .viewer_transmitter import ViewerTransmitter
+from .viewer_api import ViewerAPI
 from .processor import Processor
 from .kernel import Kernel
 from .kernel_control import KernelControl
@@ -46,7 +46,7 @@ def get_modules():
             *mosquitto_config
         ),
 
-        'transmitter': ViewerTransmitter(
+        'transmitter': ViewerAPI(
             get_topics('controller_transmitter'),
             None, True,
             *mosquitto_config

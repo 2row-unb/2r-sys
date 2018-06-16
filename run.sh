@@ -19,6 +19,6 @@ tmux send-keys -t 1 "inv run $(echo $@) -i ${SCREEN_B}" enter
 tmux send-keys -t 2 "inv run $(echo $@) -i ${SCREEN_C}" enter
 tmux send-keys -t 3 "inv run $(echo $@) -i ${SCREEN_D}" enter
 tmux send-keys -t 4 "inv run $(echo $@) -i ${SCREEN_E}" enter
-tmux send-keys -t 5 "inv flask" enter 
+tmux send-keys -t 5 "mosquitto" enter 
 tmux send-keys -t 6 "./mqttsn/rsmb/rsmb/src/broker_mqtts ./mqttsn/rsmb.conf" enter
 tmux attach
