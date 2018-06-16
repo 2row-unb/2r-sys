@@ -5,6 +5,7 @@ import gabby
 import logging
 import time
 import random
+import _thread
 
 from .decorators import rpi_mock
 from .config.settings import RPI_MOCK
@@ -19,6 +20,10 @@ else:
 
 
 class Kernel(gabby.Gabby):
+    def __init__(self, *args, **kwargs):
+        self.weight_info = 0
+        super().__init__(*args, **kwargs)
+
     def transform(self, message):
         logging.info(f'Received message from {message.topic}')
 
@@ -27,10 +32,7 @@ class Kernel(gabby.Gabby):
             imu_data = [float(x) for x in
                         message.payload.decode('utf-8').split(';')]
 
-            weight_info = self.get_weight()
-            time_info = time.time()
-            controller_data = [*imu_data, weight_info, time_info]
-
+            controller_data = [*imu_data, self.weight_info, time.time()]
             return [
                 gabby.Message(
                     controller_data,
@@ -39,20 +41,30 @@ class Kernel(gabby.Gabby):
             ]
         return []
 
+    def run(self):
+        _thread.start_new_thread(self.update_weight_info, tuple())
+        super().run()
+
+    def update_weight_info(self):
+        for new_info in self.get_weight():
+            self.weight_info = new_info
+
     def get_weight(self):
         DAT1 = 15
         CLK1 = 16
         DAT2 = 13
         CLK2 = 8
 
-        strain_gages = ((DAT1, CLK1), (DAT2, CLK2))
-        total_weight = sum(
-            [self._get_normalized_weight(dat, clk)
-             for dat, clk in strain_gages]
-        )
-        power = total_weight*9.81*0.7071
+        while True:
+            strain_gages = ((DAT1, CLK1), (DAT2, CLK2))
+            total_weight = sum(
+                [self._get_normalized_weight(dat, clk)
+                 for dat, clk in strain_gages]
+            )
+            power = total_weight*9.81*0.7071
 
-        return power
+            yield power
+            time.sleep(0.3)
 
     @rpi_mock(lambda: random.random() * 80)
     def _get_normalized_weight(self, dat, clk):
