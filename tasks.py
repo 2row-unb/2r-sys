@@ -2,12 +2,6 @@ import logging
 from invoke import task
 
 
-def _mockable(func, *args, **kwargs):
-    """
-    RaspberryPi mockable decorator
-    """
-
-
 def _setup_logging(level):
     """
     Setup logging level
@@ -38,13 +32,6 @@ def run(ctx, instance=None, rpi_mock=False, log='WARNING'):
 
     from src import system
     system.start(instance)
-
-
-@task
-def flask(ctx, port='0.0.0.0'):
-    import os
-    os.environ['FLASK_APP'] = 'src/api/api.py'
-    ctx.run(f'flask run -h {port}')
 
 
 @task
