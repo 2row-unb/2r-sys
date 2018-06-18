@@ -1,0 +1,8 @@
+version: "2"
+
+services:
+  2r-sys:
+    image: 2r-sys:local
+    build:
+      context: ../
+      dockerfile: ./docker/Dockerfile

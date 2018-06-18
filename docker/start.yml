@@ -1,0 +1,9 @@
+version: "2"
+
+services:
+  2r-sys:
+    image: 2r-sys:local
+    volumes:
+      - ../:/app
+    ports:
+      - 5000:5000
