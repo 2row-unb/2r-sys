@@ -22,7 +22,11 @@ class Processor(gabby.Gabby):
     def transform(self, message):
         logging.info(f'Transforming data: {message.data}')
 
-        v_data = self.visualizer_data(message.data)
+        for i in range(0, IMUS):
+            raw_data = message.data[i * 9:(i + 1) * 9]
+            self.AHRS_update(self.ahrs[i], raw_data)
+
+        v_data = self.euler_angles_visualizer_data(message.data)
 
         return [gabby.Message(v_data, self.output_topics)]
 
@@ -30,13 +34,24 @@ class Processor(gabby.Gabby):
         data = []
 
         for i in range(0, IMUS):
-            raw_data = input_data[i * 9:(i + 1) * 9]
-            self.AHRS_update(self.ahrs[i], raw_data)
             data.extend(self.AHRS_rotation_matrix(self.ahrs[i]))
+            raw_data = input_data[i * 9:(i + 1) * 9]
             accel = raw_data[0:3]
             data.extend(accel)
             mag = raw_data[6:9]
             data.extend(mag)
+
+        weight, timestamp = input_data[9 * 2:] # TODO: change the value 2 to IMUS when ready
+        data.extend([weight, timestamp])
+
+        return data
+
+    def euler_angles_visualizer_data(self, input_data):
+        data = []
+
+        for i in range(0, IMUS):
+            roll, pitch, yaw = self.ahrs[i].quaternion.to_euler_angles()
+            data.extend([roll, pitch, yaw])
 
         weight, timestamp = input_data[9 * 2:] # TODO: change the value 2 to IMUS when ready
         data.extend([weight, timestamp])
