@@ -1,7 +1,6 @@
 import time
 import random
 import numpy as np
-import matplotlib.pylab as plt
 
 RESL = 200
 TIME = 0.0000
@@ -30,10 +29,6 @@ def run():
     tmp = 0
     xdata = []
     ydata = []
-    axes = plt.gca()
-    axes.set_xlim(0, X_LEN)
-    axes.set_ylim(-AMPL, AMPL)
-    line, = axes.plot(xdata, ydata, 'r-')
 
     while True:
         v = generate_data(idx)
@@ -49,13 +44,6 @@ def run():
         if tmp > X_LEN:
             ydata = ydata[1:]
             xdata.pop()
-
-        line.set_xdata(xdata)
-        line.set_ydata(ydata)
-        plt.draw()
-        plt.pause(1e-17)
-
-    plt.show()
 
 
 if __name__ == '__main__':
