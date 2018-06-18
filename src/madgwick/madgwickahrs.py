@@ -22,7 +22,7 @@ from numpy.linalg import norm
 from .quaternion import Quaternion
 
 class MadgwickAHRS:
-    samplePeriod = 1/5
+    samplePeriod = 1/50
     quaternion = Quaternion(1, 0, 0, 0)
     beta = 0.041
 

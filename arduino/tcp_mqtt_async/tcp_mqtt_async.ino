@@ -17,15 +17,15 @@
 #include <ESP8266WiFi.h> // biblioteca para usar as funções de Wifi do módulo ESP8266
 #include <PubSubClient.h>
 #include <MQTT.h>
-#include <ArduinoJson.h>  COLOCAR SEM AS BIBLIOTECAS PARA VER SE PARA DE DAR PROBLEMA NOS PINOS DIGITAIS
+//#include <ArduinoJson.h>  COLOCAR SEM AS BIBLIOTECAS PARA VER SE PARA DE DAR PROBLEMA NOS PINOS DIGITAIS
 #include <stdlib.h>
 #define MUX_A D5
 #define MUX_B D6
 #define MUX_C D7  
 
-const char* ssid = "lappisair";
-const char* password = "<%=lappiscontainer=%>";
-const char* mqtt_server = "192.168.10.148";
+const char* ssid = "GVT-EC8B";
+const char* password = "0503000145";
+const char* mqtt_server = "192.168.25.237";
 
 #include <MQTT.h>
 
@@ -463,7 +463,7 @@ void loop() {
 
   
   long now = millis();
-  if (now - lastMsg > 50) {
+  if (now - lastMsg >= 20) {
     lastMsg = now;
 
     //snprintf (msg, 75, "%f", aux[1]);
