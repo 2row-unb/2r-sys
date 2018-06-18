@@ -37,7 +37,9 @@ class ViewerAPI(gabby.Gabby, Flask):
             self.route(route)(partial_fn)
 
     def run(self):
-        _thread.start_new_thread(Flask.run, (self,), {'debug': False})
+        _thread.start_new_thread(Flask.run, (self,), {
+            'debug': False, 'host': '0.0.0.0'
+        })
         gabby.Gabby.run(self)
 
     def transform(self, message):
