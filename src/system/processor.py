@@ -5,6 +5,7 @@ from ..madgwick.madgwickahrs import MadgwickAHRS
 import logging
 import gabby
 
+IMUS = 1
 
 class Processor(gabby.Gabby):
     """
@@ -13,44 +14,43 @@ class Processor(gabby.Gabby):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.ahrs = MadgwickAHRS()
+        self.ahrs = []
+
+        for i in range(0, IMUS):
+            self.ahrs.append(MadgwickAHRS())
 
     def transform(self, message):
         logging.info(f'Transforming data: {message.data}')
 
-        raw_data = message.data[:18]
-        weight, timestamp = message.data[18:]
+        v_data = self.visualizer_data(message.data)
 
-        self.AHRS_update(raw_data)
+        return [gabby.Message(v_data, self.output_topics)]
 
-        matrix = self.AHRS_rotation_matrix()
+    def visualizer_data(self, input_data):
+        data = []
 
-        accel = raw_data[0:3]
-        matrix.extend(accel)
+        for i in range(0, IMUS):
+            raw_data = input_data[i * 9:(i + 1) * 9]
+            self.AHRS_update(self.ahrs[i], raw_data)
+            data.extend(self.AHRS_rotation_matrix(self.ahrs[i]))
+            accel = raw_data[0:3]
+            data.extend(accel)
+            mag = raw_data[6:9]
+            data.extend(mag)
 
-        mag = raw_data[6:9]
-        matrix.extend(mag)
-        matrix.extend([weight, timestamp])
+        weight, timestamp = input_data[9 * 2:] # TODO: change the value 2 to IMUS when ready
+        data.extend([weight, timestamp])
 
-        return [gabby.Message(matrix, self.output_topics)]
+        return data
 
-    def AHRS_update(self, data):
+    def AHRS_update(self, ahrs, data):
         accel = data[0:3]
         gyro = data[3:6]
         mag = data[6:9]
-        self.ahrs.update(mag, accel, gyro)
+        ahrs.update(mag, accel, gyro)
 
-    def AHRS_quaternion(self):
-        return self.ahrs.quaternion
-
-    def AHRS_angle_axis(self):
-        return self.ahrs.quaternion.to_angle_axis()
-
-    def AHRS_euler_angles(self):
-        return self.ahrs.quaternion.to_euler_angles()
-
-    def AHRS_rotation_matrix(self):
-        w, x, y, z = self.ahrs.quaternion
+    def AHRS_rotation_matrix(self, ahrs):
+        w, x, y, z = ahrs.quaternion
 
         tx = 2 * x
         ty = 2 * y
