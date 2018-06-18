@@ -58,6 +58,21 @@ class ViewerAPI(gabby.Gabby, Flask):
 
     @register_route('/angles')
     def angles_view(self):
-        response = {'values': self.info} if self.info else \
-            {'error': 'Information unavailable'}
+        angles = self.info[0:3]
+
+        response = {
+            'status': 'ok',
+            'errors': [],
+            'state': 2,
+            'athlete': {
+                'l_thigh_1': angles
+            },
+            'power': 400,
+            'speed': 33,
+            'timer': 122,
+            'difficulty': 2
+        } if self.info else {
+            'status': 'fail',
+            'errors': ['Information unavailable']}
+
         return jsonify(response)
