@@ -4,7 +4,9 @@ Module to control async execution of all 2RSystem components
 import logging
 import gabby
 
-from .config.settings import MOSQUITTO_URL, MOSQUITTO_PORT, MOSQUITTO_KEEPALIVE
+from .config.settings import (
+    MOSQUITTO_URL, MOSQUITTO_PORT, MOSQUITTO_KEEPALIVE, RSMB_URL, RSMB_PORT
+)
 from .controller import Controller
 from .viewer_api import ViewerAPI
 from .processor import Processor
@@ -14,27 +16,31 @@ from .topics import get_topics
 
 
 def get_modules():
-    mosquitto_config = [MOSQUITTO_URL, MOSQUITTO_PORT, MOSQUITTO_KEEPALIVE]
+    hosts_config = (
+        MOSQUITTO_URL, MOSQUITTO_PORT, MOSQUITTO_KEEPALIVE,
+        RSMB_URL, RSMB_PORT,
+    )
 
     return {
         'kernel': Kernel(
-            get_topics('esp_kernel'),
+            get_topics('ek'),
             get_topics('kernel_controller'),
             False,
-            *mosquitto_config
+            *hosts_config,
+            transmission=['udp', 'tcp']
         ),
 
         'kernelcontrol': KernelControl(
             get_topics('controller_kernelcontrol'),
             get_topics('kernelcontrol_controller'),
             True,
-            *mosquitto_config
+            *hosts_config,
         ),
 
         'controller': Controller(
             get_topics(
-                'kernel_controller',
                 'kernelcontrol_controller',
+                'kernel_controller',
                 'processor_controller'
             ),
             get_topics(
@@ -43,20 +49,20 @@ def get_modules():
                 'controller_kernelcontrol'
             ),
             True,
-            *mosquitto_config
+            *hosts_config,
         ),
 
         'transmitter': ViewerAPI(
             get_topics('controller_transmitter'),
             None, True,
-            *mosquitto_config
+            *hosts_config
         ),
 
         'processor': Processor(
             get_topics('controller_processor'),
             get_topics('processor_controller'),
             True,
-            *mosquitto_config
+            *hosts_config
         ),
     }
 

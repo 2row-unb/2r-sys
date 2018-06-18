@@ -26,7 +26,7 @@ class KernelControl(gabby.Gabby):
         self._setup_relays(37, 35, 33, 31)
         self._setup_buttons(up=18, down=11, reset=12)
 
-    def transform(self, message):
+    def transform(self, client, message):
         if message.belongs_to('controller_kernelcontrol'):
             self.update_power_level(message.data)
         return []

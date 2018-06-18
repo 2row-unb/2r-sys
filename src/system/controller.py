@@ -15,7 +15,7 @@ class Controller(gabby.Gabby):
         super().__init__(*args, **kwargs)
         self._power_level = 0
 
-    def transform(self, message):
+    def transform(self, client, message):
         if self.is_message_up_to_date(message):
             if message.belongs_to('processor_controller'):
                 logging.info('Received message from Processor')

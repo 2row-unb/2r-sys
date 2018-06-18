@@ -15,7 +15,7 @@ class Processor(gabby.Gabby):
         super().__init__(*args, **kwargs)
         self.ahrs = MadgwickAHRS()
 
-    def transform(self, message):
+    def transform(self, client, message):
         logging.info(f'Transforming data: {message.data}')
 
         raw_data = message.data[:18]

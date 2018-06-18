@@ -27,7 +27,7 @@ class Kernel(gabby.Gabby):
     def transform(self, message):
         logging.info(f'Received message from {message.topic}')
 
-        if message.topic == 'esp_kernel':
+        if message.topic == 'ek':
             logging.debug(f"Data: {message.payload.decode('utf-8')}")
             imu_data = [float(x) for x in
                         message.payload.decode('utf-8').split(';')]

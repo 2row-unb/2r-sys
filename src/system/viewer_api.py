@@ -42,7 +42,7 @@ class ViewerAPI(gabby.Gabby, Flask):
         })
         gabby.Gabby.run(self)
 
-    def transform(self, message):
+    def transform(self, client, message):
         """
         Transform data to viewer
         """

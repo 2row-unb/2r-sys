@@ -6,7 +6,8 @@ import gabby
 
 _topics = gabby.TopicCollection(
     # (double)    1 - 18 : IMU data.
-    gabby.Topic('esp_kernel', 'd'*18),
+    # esp_kernel topic
+    gabby.Topic('ek', 'd'*18, 'udp'),
 
     # (double)    1 - 18 : IMU data
     # (double)   19      : Power
@@ -47,4 +48,4 @@ def get_topics(*args):
         >>> get_topics("kernel_controller", "transmitter_kernel")
         [..., ...]
     """
-    return [_topics.find_by(name=arg) for arg in args]
+    return gabby.TopicCollection([_topics.find_by(name=arg) for arg in args])
