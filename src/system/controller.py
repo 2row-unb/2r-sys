@@ -21,6 +21,9 @@ class Controller(gabby.Gabby):
         if self.is_message_up_to_date(message):
             if message.belongs_to('processor_controller'):
                 logging.info('Received message from Processor')
+                current_time = message.data[-1]
+                time_elapsed = int(current_time - self._start_time)
+                message.data = [*message.data[:-1], time_elapsed]
                 message.topics = self.output_topics.filter_by(
                                     name='controller_transmitter')
                 return [message]

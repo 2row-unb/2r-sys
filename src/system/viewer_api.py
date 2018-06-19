@@ -60,7 +60,7 @@ class ViewerAPI(gabby.Gabby, Flask):
     def angles_view(self):
         angles = self.info[0:3]
         quaternion = self.info[3:7]
-        power, timestamp = self.info[7:9]
+        power, time_elapsed = self.info[7:9]
 
         response = {
             'status': 'ok',
@@ -72,7 +72,7 @@ class ViewerAPI(gabby.Gabby, Flask):
             },
             'power': power,
             'speed': 33,
-            'timer': timestamp,
+            'timer': time_elapsed,
             'difficulty': 2
         } if self.info else {
             'status': 'fail',
