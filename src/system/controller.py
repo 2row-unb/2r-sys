@@ -65,10 +65,8 @@ class Controller(gabby.Gabby):
     def process_buttons(self, buttons):
         button_up, button_down, button_reset = buttons
         old_power_level = self._power_level
-        if button_reset == 1:
-            self.reset()
-        else:
-            self.process_power_level(button_up, button_down)
+        self.process_power_level(button_up, button_down)
+        self.process_reset(button_reset)
         new_power_level = self._power_level
         if old_power_level != new_power_level:
             return [
@@ -97,7 +95,10 @@ class Controller(gabby.Gabby):
         logging.debug(f'Button UP: {button_up} | '
                       f'Button DOWN: {button_down} | '
                       f'Current power level: {self._power_level}')
-        return self._power_level
+
+    def process_reset(self, button_reset):
+        if button_reset == 1:
+            self.reset()
 
     def reset(self):
         self._start_time = time.time()
