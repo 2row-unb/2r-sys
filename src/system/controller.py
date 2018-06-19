@@ -13,6 +13,8 @@ class Controller(gabby.Gabby):
     """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._start_time = time.time()
+        self._state = 1
         self._power_level = 0
 
     def transform(self, message):
@@ -58,8 +60,13 @@ class Controller(gabby.Gabby):
         ]
 
     def process_buttons(self, buttons):
+        button_up, button_down, button_reset = buttons
         old_power_level = self._power_level
-        new_power_level = self.process_power_level(*buttons[:2])
+        if button_reset == 1:
+            self.reset()
+        else:
+            self.process_power_level(button_up, button_down)
+        new_power_level = self._power_level
         if old_power_level != new_power_level:
             return [
                 gabby.Message(
@@ -88,3 +95,8 @@ class Controller(gabby.Gabby):
                       f'Button DOWN: {button_down} | '
                       f'Current power level: {self._power_level}')
         return self._power_level
+
+    def reset(self):
+        self._start_time = time.time()
+        self._state = 1 # TODO: add (on) state change method
+        self._power_level = 0
