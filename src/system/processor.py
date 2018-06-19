@@ -52,6 +52,8 @@ class Processor(gabby.Gabby):
         for i in range(0, IMUS):
             roll, pitch, yaw = self.ahrs[i].quaternion.to_euler_angles()
             data.extend([roll, pitch, yaw])
+            w, x, y, z = self.ahrs[i].quaternion.get_q()
+            data.extend([x, y, z, w])
 
         weight, timestamp = input_data[9 * 2:] # TODO: change the value 2 to IMUS when ready
         data.extend([weight, timestamp])

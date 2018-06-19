@@ -41,7 +41,7 @@ class Controller(gabby.Gabby):
             f'Time now: {current_time} | '
             f'Time delta: {time_delta}'
         )
-        return time_delta < 0.04  # 25 frames per second
+        return time_delta < 0.05  # 20 frames per second
 
     def process_views(self, data):
         return [

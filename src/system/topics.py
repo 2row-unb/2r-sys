@@ -22,7 +22,7 @@ _topics = gabby.TopicCollection(
     # (double)    1 - 15 : Angles
     # (double)    16     : Power
     # (double)    17     : Timestamp
-    gabby.Topic('controller_transmitter', 'd'*17),
+    gabby.Topic('controller_transmitter', 'd'*9),
 
     # (double)    1 - 18 : IMU Data
     # (double)   19      : Power
@@ -32,7 +32,7 @@ _topics = gabby.TopicCollection(
     # (double)    1 - 15 : Angles
     # (double)   16      : Power
     # (double)   17      : Timestamp
-    gabby.Topic('processor_controller', 'd'*17),
+    gabby.Topic('processor_controller', 'd'*9),
 )
 
 

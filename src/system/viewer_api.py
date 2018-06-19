@@ -59,17 +59,20 @@ class ViewerAPI(gabby.Gabby, Flask):
     @register_route('/angles')
     def angles_view(self):
         angles = self.info[0:3]
+        quaternion = self.info[3:7]
+        power, timestamp = self.info[7:9]
 
         response = {
             'status': 'ok',
             'errors': [],
             'state': 2,
             'athlete': {
-                'l_thigh_1': angles
+                'l_thigh_1': angles,
+                'l_thigh_1_q': quaternion
             },
-            'power': 400,
+            'power': power,
             'speed': 33,
-            'timer': 122,
+            'timer': timestamp,
             'difficulty': 2
         } if self.info else {
             'status': 'fail',
