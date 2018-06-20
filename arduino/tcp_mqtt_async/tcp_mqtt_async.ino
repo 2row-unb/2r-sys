@@ -463,7 +463,7 @@ void loop() {
 
   
   long now = millis();
-  if (now - lastMsg >= 20) {
+  if (now - lastMsg >= 50) {
     lastMsg = now;
 
     //snprintf (msg, 75, "%f", aux[1]);

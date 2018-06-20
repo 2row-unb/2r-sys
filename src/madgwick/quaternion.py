@@ -48,6 +48,9 @@ class Quaternion:
         self._set_q(q)
 
     # Quaternion specific interfaces
+    
+    def get_q(self):
+        return self._q.tolist()
 
     def conj(self):
         """

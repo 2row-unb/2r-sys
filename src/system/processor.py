@@ -1,9 +1,13 @@
 """
 Module to filter and process all data
 """
-from ..madgwick.madgwickahrs import MadgwickAHRS
 import logging
 import gabby
+
+from ..madgwick.madgwickahrs import MadgwickAHRS
+from .calibrator import Calibrator
+from .state import State
+from .config.settings import N_IMUS
 
 
 class Processor(gabby.Gabby):
@@ -13,44 +17,90 @@ class Processor(gabby.Gabby):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.ahrs = MadgwickAHRS()
+        self._ahrs = [MadgwickAHRS()] * N_IMUS
+        self._calibrators = [Calibrator()] * N_IMUS
+        self._averages = []
+        self._state = State.INITIAL
+        self._enable_change = True
 
     def transform(self, client, message):
         logging.info(f'Transforming data: {message.data}')
+        logging.info('Processor state: ' + 'INITIAL' if self._state == State.INITIAL else 'RUNNING')
 
-        raw_data = message.data[:18]
-        weight, timestamp = message.data[18:]
+        for i in range(N_IMUS):
+            raw_data = message.data[i * 9:(i + 1) * 9]
+            self.AHRS_update(self._ahrs[i], raw_data)
 
-        self.AHRS_update(raw_data)
+        state, current_time = message.data[-2:]
 
-        matrix = self.AHRS_rotation_matrix()
+        if state == State.INITIAL and self._enable_change is True:
+            self.run_calibration_step(current_time)
+        elif state == State.RUNNING:
+            self._enable_change = True
 
-        accel = raw_data[0:3]
-        matrix.extend(accel)
+        v_data = self.euler_angles_visualizer_data(message.data)
 
-        mag = raw_data[6:9]
-        matrix.extend(mag)
-        matrix.extend([weight, timestamp])
+        return [gabby.Message(v_data, self.output_topics)]
 
-        return [gabby.Message(matrix, self.output_topics)]
+    def visualizer_data(self, input_data):
+        data = []
 
-    def AHRS_update(self, data):
+        for i in range(N_IMUS):
+            data.extend(self.AHRS_rotation_matrix(self._ahrs[i]))
+            raw_data = input_data[i * 9:(i + 1) * 9]
+            accel = raw_data[0:3]
+            data.extend(accel)
+            mag = raw_data[6:9]
+            data.extend(mag)
+
+        weight, state, timestamp = input_data[9 * 2:] # TODO: change the value 2 to N_IMUS when ready
+        data.extend([weight, self._state, timestamp])
+
+        return data
+
+    def euler_angles_visualizer_data(self, input_data):
+        data = []
+
+        for i in range(N_IMUS):
+            roll, pitch, yaw = self._ahrs[i].quaternion.to_euler_angles()
+            data.extend([roll, pitch, yaw])
+            w, x, y, z = self._ahrs[i].quaternion.get_q()
+            data.extend([x, y, z, w])
+
+        weight, state, timestamp = input_data[9 * 2:] # TODO: change the value 2 to N_IMUS when ready
+        data.extend([weight, self._state, timestamp])
+
+        return data
+
+    def run_calibration_step(self, current_time):
+        logging.info('Running calibration step')
+
+        if self._state == State.RUNNING:
+            self._averages = []
+            for i in range(N_IMUS):
+                self._calibrators[i].clear()
+
+        self._state = State.INITIAL
+
+        calibrated = all([cal.add_sample(ahrs.quaternion.to_euler_angles(), current_time)
+                         for ahrs, cal in zip(self._ahrs, self._calibrators)]
+                        )
+
+        if calibrated is True:
+            self._state = State.RUNNING
+            self._enable_change = False
+            for i in range(N_IMUS):
+                self._averages.append(self._calibrators[i].averages())
+
+
+    def AHRS_update(self, ahrs, data):
         accel = data[0:3]
         gyro = data[3:6]
         mag = data[6:9]
-        self.ahrs.update(mag, accel, gyro)
+        ahrs.update(mag, accel, gyro)
 
-    def AHRS_quaternion(self):
-        return self.ahrs.quaternion
-
-    def AHRS_angle_axis(self):
-        return self.ahrs.quaternion.to_angle_axis()
-
-    def AHRS_euler_angles(self):
-        return self.ahrs.quaternion.to_euler_angles()
-
-    def AHRS_rotation_matrix(self):
-        w, x, y, z = self.ahrs.quaternion
+    def AHRS_rotation_matrix(self, ahrs):
+        w, x, y, z = ahrs.quaternion
 
         tx = 2 * x
         ty = 2 * y

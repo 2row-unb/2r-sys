@@ -11,7 +11,6 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
-
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
@@ -22,7 +21,7 @@ from numpy.linalg import norm
 from .quaternion import Quaternion
 
 class MadgwickAHRS:
-    samplePeriod = 1/50
+    samplePeriod = 1/20
     quaternion = Quaternion(1, 0, 0, 0)
     beta = 0.041
 
