@@ -31,16 +31,16 @@ class Kernel(gabby.Gabby):
             logging.debug(
                 f"Data: {message.payload.decode('utf-8').split(';')}"
             )
-#            imu_data = [float(x) for x in
-#                        message.payload.decode('utf-16').split(';')]
-#
-            # controller_data = [*imu_data, self.weight_info, time.time()]
-            # return [
-            #     gabby.Message(
-            #         controller_data,
-            #         self.output_topics.filter_by(name='kernel_controller')
-            #     )
-            # ]
+            imu_data = [float(x) for x in
+                        message.payload.decode('utf-8').split(';')]
+
+            controller_data = [*imu_data, self.weight_info, time.time()]
+            return [
+                gabby.Message(
+                    controller_data,
+                    self.output_topics.filter_by(name='kernel_controller')
+                )
+            ]
         return []
 
     def run(self):
