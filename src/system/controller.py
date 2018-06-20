@@ -4,7 +4,7 @@
 import logging
 import gabby
 import time
-
+from .state import State
 
 class Controller(gabby.Gabby):
     """
@@ -14,22 +14,30 @@ class Controller(gabby.Gabby):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._start_time = time.time()
-        self._state = 1
+        self._state = State.INITIAL
         self._power_level = 0
 
     def transform(self, message):
+        logging.info('Controller state: ' + ('INITIAL' if self._state == State.INITIAL else 'RUNNING'))
+
         if self.is_message_up_to_date(message):
             if message.belongs_to('processor_controller'):
                 logging.info('Received message from Processor')
-                current_time = message.data[-1]
+
+                state, current_time = message.data[-2:]
                 time_elapsed = int(current_time - self._start_time)
+
+                self._state = state
+
                 message.data = [*message.data[:-1], time_elapsed]
                 message.topics = self.output_topics.filter_by(
                                     name='controller_transmitter')
+
                 return [message]
 
             elif message.belongs_to('kernel_controller'):
                 logging.info('Received message from Kernel')
+                message.data = [*message.data[:-1], self._state, message.data[-1]]
                 return self.process_views(message.data)
 
         if message.belongs_to('kernelcontrol_controller'):
@@ -97,10 +105,10 @@ class Controller(gabby.Gabby):
                       f'Current power level: {self._power_level}')
 
     def process_reset(self, button_reset):
-        if button_reset == 1:
+        if button_reset == 1 and self._state == State.RUNNING:
             self.reset()
 
     def reset(self):
         self._start_time = time.time()
-        self._state = 1 # TODO: add (on) state change method
+        self._state = State.INITIAL # TODO: add (on) state change method
         self._power_level = 0
