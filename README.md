@@ -31,7 +31,12 @@ pip3 install -r requirements.txt
   mqtt.sn.enable_qos3 = off
   mqtt.sn.predefined.topic.0 = reserved
   ```
-4. Reload emqttd if necessary.
+4. Enable emq_sn plugin
+  ```bash
+  ./emqttd_ctl plugins load emq_sn
+  ```
+
+5. Reload emqttd if necessary.
 
 ### Run
 
