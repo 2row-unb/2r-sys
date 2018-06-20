@@ -24,19 +24,21 @@ _topics = gabby.TopicCollection(
     # (double)    8      : Power
     # (double)    9      : State
     # (double)   10      : Timestamp
-    gabby.Topic('controller_transmitter', 'd'*10), # TODO: Put state as an integer
-
+    # [TODO] Put state as an integer
+    gabby.Topic('controller_transmitter', 'd'*10),
     # (double)    1 - 18 : IMU Data
     # (double)   19      : Power
     # (int)      20      : State
     # (double)   21      : Timestamp
-    gabby.Topic('controller_processor', 'd'*21), # TODO: Put state as an integer
+    # [TODO] Put state as an integer
+    gabby.Topic('controller_processor', 'd'*21),
 
     # (double)    1 - 7  : Angles and Quaternions
     # (double)    8      : Power
     # (double)    9      : State
     # (double)   10      : Timestamp
-    gabby.Topic('processor_controller', 'd'*10), # TODO: Put state as an integer
+    # [TODO] Put state as an integer
+    gabby.Topic('processor_controller', 'd'*10),
 )
 
 

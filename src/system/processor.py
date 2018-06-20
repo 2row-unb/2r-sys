@@ -21,26 +21,28 @@ class Processor(gabby.Gabby):
         self._calibrators = [Calibrator()] * N_IMUS
         self._averages = []
         self._state = State.INITIAL
-        self._enable_change = True
+        self._can_state_change = True
 
     def transform(self, client, message):
         logging.info(f'Transforming data: {message.data}')
-        logging.info('Processor state: ' + 'INITIAL' if self._state == State.INITIAL else 'RUNNING')
+        logging.info(f'Processor state: {State.name(self._state)}')
 
-        for i in range(N_IMUS):
-            raw_data = message.data[i * 9:(i + 1) * 9]
-            self.AHRS_update(self._ahrs[i], raw_data)
-
-        state, current_time = message.data[-2:]
-
-        if state == State.INITIAL and self._enable_change is True:
-            self.run_calibration_step(current_time)
-        elif state == State.RUNNING:
-            self._enable_change = True
-
+        self.update_ahrs(message.data)
+        self.calibrate_measures(*message.data[-2:])
         v_data = self.euler_angles_visualizer_data(message.data)
 
         return [gabby.Message(v_data, self.output_topics)]
+
+    def update_ahrs(self, data):
+        for i in range(N_IMUS):
+            raw_data = data[i * 9:(i + 1) * 9]
+            self.AHRS_update(self._ahrs[i], raw_data)
+
+    def calibrate_measures(self, controller_state, current_time):
+        if controller_state == State.INITIAL and self._can_state_change:
+            self.run_calibration_step(current_time)
+        elif controller_state == State.RUNNING:
+            self._can_state_change = True
 
     def visualizer_data(self, input_data):
         data = []
@@ -52,8 +54,8 @@ class Processor(gabby.Gabby):
             data.extend(accel)
             mag = raw_data[6:9]
             data.extend(mag)
-
-        weight, state, timestamp = input_data[9 * 2:] # TODO: change the value 2 to N_IMUS when ready
+        # [TODO] set number of IMUS dinamically
+        weight, state, timestamp = input_data[9 * 2:]
         data.extend([weight, self._state, timestamp])
 
         return data
@@ -66,8 +68,8 @@ class Processor(gabby.Gabby):
             data.extend([roll, pitch, yaw])
             w, x, y, z = self._ahrs[i].quaternion.get_q()
             data.extend([x, y, z, w])
-
-        weight, state, timestamp = input_data[9 * 2:] # TODO: change the value 2 to N_IMUS when ready
+        # [TODO] set number of IMUS dinamically
+        weight, state, timestamp = input_data[9 * 2:]
         data.extend([weight, self._state, timestamp])
 
         return data
@@ -76,22 +78,19 @@ class Processor(gabby.Gabby):
         logging.info('Running calibration step')
 
         if self._state == State.RUNNING:
-            self._averages = []
-            for i in range(N_IMUS):
-                self._calibrators[i].clear()
+            for cal in self._calibrators:
+                cal.clear()
+            self._state = State.INITIAL
 
-        self._state = State.INITIAL
+        calibrated = all(
+            [cal.add_sample(ahrs.quaternion.to_euler_angles(), current_time)
+             for ahrs, cal in zip(self._ahrs, self._calibrators)]
+        )
 
-        calibrated = all([cal.add_sample(ahrs.quaternion.to_euler_angles(), current_time)
-                         for ahrs, cal in zip(self._ahrs, self._calibrators)]
-                        )
-
-        if calibrated is True:
+        if calibrated:
             self._state = State.RUNNING
-            self._enable_change = False
-            for i in range(N_IMUS):
-                self._averages.append(self._calibrators[i].averages())
-
+            self._can_state_change = False
+            self._averages = [cal.averages() for cal in self._calibrators]
 
     def AHRS_update(self, ahrs, data):
         accel = data[0:3]
@@ -115,15 +114,16 @@ class Processor(gabby.Gabby):
         tyz = tz * y
         tzz = tz * z
 
-        matrix = []
-        matrix.append(1.0 - (tyy + tzz))
-        matrix.append(txy - twz)
-        matrix.append(txz + twy)
-        matrix.append(txy + twz)
-        matrix.append(1.0 - (txx + tzz))
-        matrix.append(tyz - twx)
-        matrix.append(txz - twy)
-        matrix.append(tyz + twx)
-        matrix.append(1.0 - (txx + tyy))
+        matrix = [
+            1.0 - (tyy + tzz),
+            txy - twz,
+            txz + twy,
+            txy + twz,
+            1.0 - (txx + tzz),
+            tyz - twx,
+            txz - twy,
+            tyz + twx,
+            1.0 - (txx + tyy),
+        ]
 
         return matrix

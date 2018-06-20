@@ -59,7 +59,7 @@ class ViewerAPI(gabby.Gabby, Flask):
     @register_route('/info')
     def angles_view(self):
         angles = self.info[0:3]
-        quaternion = self.info[3:7]
+        # quaternion = self.info[3:7]
         power, state, time_elapsed = self.info[-3:]
 
         response = {

@@ -1,15 +1,14 @@
 import time
-import logging
-from random import *
 
 DESIRED_SAMPLES = 100
 ACCEPTED_DIFFERENCE = 10000.0
 TIME_TO_START = 10
 
+
 class Calibrator():
     def __init__(self):
         self._start_time = time.time()
-        self._axes_sums = [None, None, None]
+        self._axes_sums = [None]*3
         self._samples = 0
 
     def add_sample(self, sample_data, current_time):
@@ -20,7 +19,7 @@ class Calibrator():
         if time_elapsed < TIME_TO_START:
             return False
 
-        if self._axes_sums[0] == None:
+        if self._axes_sums[0] is None:
             self._axes_sums = [*sample_data]
             self._samples = 1
         else:
@@ -53,5 +52,5 @@ class Calibrator():
 
     def clear(self):
         self._start_time = time.time()
-        self._axes_sums = [None, None, None]
+        self._axes_sums = [None]*3
         self._samples = 0
