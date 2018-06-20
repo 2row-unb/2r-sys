@@ -35,7 +35,7 @@ def run(ctx, instance=None, rpi_mock=False, log='WARNING'):
 
 
 @task
-def faker(ctx, mqtt=False, timer=0.3, shot=False):
+def faker(ctx, mqtt=False, mqttsn=False, timer=0.3, shot=False):
     import time
     from src.faker.fake_data import data_generator
 
@@ -45,11 +45,16 @@ def faker(ctx, mqtt=False, timer=0.3, shot=False):
         c.connect('localhost', 1883, 60)
         gen = data_generator(
             lambda x: c.publish(
-                'esp_kernel',
-                ";".join(map(lambda a: str(float(a)), x))
+                'ek', ";".join(map(lambda a: str(float(a)), x))
             ))
-    else:
-        gen = data_generator(lambda x: list(map(int, x)))
+    elif mqttsn:
+        from mqttsn.client import Client
+        c = Client(host='localhost', port=1885)
+        c.connect()
+        gen = data_generator(
+            lambda x: c.publish(
+                'ek', ";".join(map(lambda a: str(float(a)), x))
+            ))
 
     while True:
         next(gen)
