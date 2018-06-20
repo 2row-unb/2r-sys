@@ -56,26 +56,37 @@ class ViewerAPI(gabby.Gabby, Flask):
         logging.debug("Updating angles information")
         self.info = data
 
-    @register_route('/angles')
+    @register_route('/info')
     def angles_view(self):
         angles = self.info[0:3]
         quaternion = self.info[3:7]
-        power, time_elapsed = self.info[7:9]
+        power, state, time_elapsed = self.info[-3:]
 
         response = {
-            'status': 'ok',
-            'errors': [],
-            'state': 2,
-            'athlete': {
-                'l_thigh_1': angles,
-                'l_thigh_1_q': quaternion
+            'angles': {
+                'athlete': {
+                    'legs': {
+                        'ul': angles,
+                        'll': angles,
+                        'ur': angles,
+                        'lr': angles
+                    },
+                    'arms': {
+                        'ul': angles,
+                        'll': angles,
+                        'ur': angles,
+                        'lr': angles
+                    }
+                }
             },
+            'difficulty': 2,
+            'errors': [],
             'power': power,
             'speed': 33,
-            'timer': time_elapsed,
-            'difficulty': 2
+            'state': state,
+            'timer': time_elapsed
         } if self.info else {
-            'status': 'fail',
-            'errors': ['Information unavailable']}
+            'errors': ['Information unavailable']
+        }
 
         return jsonify(response)
