@@ -3,6 +3,9 @@
 #include <ArduinoJson.h>
 #include <WiFiUdp.h>
 #include <stdlib.h>
+#define MUX_A D5
+#define MUX_B D6
+#define MUX_C D7  
 
 //----------------------------------------------------------------------------
 //  FUNCAO ESCRITA DADOS [Endereco(8bits) | Regitrador(8bits) | Dado(8bits)]
@@ -13,8 +16,8 @@
 
 
 // wifi connection variables
-const char* ssid = "";
-const char* password = "";
+const char* ssid = "lappisair";
+const char* password = "<%=lappiscontainer=%>";
 boolean wifiConnected = false;
 
 // UDP variables
@@ -91,11 +94,11 @@ double offset_magnx = 128.50, offset_magny = -252.00, offset_magnz = 421.50;
 double scale_magnx = 1.01, scale_magny = 0.96, scale_magnz = 1.03;
 
 // Valores "RAW" de tipo inteiro
-int16_t raw_accelx, raw_accely, raw_accelz;
+/*int16_t raw_accelx, raw_accely, raw_accelz;
 int16_t raw_gyrox, raw_gyroy, raw_gyroz;
 int16_t raw_temp;
 int16_t raw_magnx, raw_magny, raw_magnz;
-
+*/
 //Para 2 Imus
 int16_t raw_accelx, raw_accely, raw_accelz;
 int16_t raw_gyrox, raw_gyroy, raw_gyroz;
@@ -242,7 +245,11 @@ void changeMux(int c, int b, int a) {
 //                                                                ----------------------------------------------------------------------------
 //                                                                                           INICIO DA FUNCAO 'LOOP'
 //                                                                ----------------------------------------------------------------------------
+double degree_to_rad(double angle){
 
+  return (angle * M_PI) / 180.0;
+  
+}
 void loop() {
   
 //t_ini_leitura = millis(); //HABILITAR PARA MEDIR O TEMPO DE MUESTREO DOS SENSORES
