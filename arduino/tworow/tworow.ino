@@ -13,8 +13,8 @@
 
 
 // wifi connection variables
-const char* ssid = "lappisair";
-const char* password = "<%=lappiscontainer=%>";
+const char* ssid = "";
+const char* password = "";
 boolean wifiConnected = false;
 
 // UDP variables
