@@ -86,6 +86,6 @@ class ViewerAPI(gabby.Gabby, Flask):
                 'timer': time_elapsed
             }
         else:
-            'errors': ['Information unavailable']
+            response = {'errors': ['Information unavailable']}
 
         return jsonify(response)
