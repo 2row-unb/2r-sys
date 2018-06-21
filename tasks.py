@@ -20,7 +20,7 @@ def install(ctx):
 
 
 @task
-def run(ctx, instance=None, rpi_mock=False, log='WARNING'):
+def run(ctx, instance=None, rpi_mock=False, log='WARNING', exc=[]):
     """
     Task to run 2RSystem
     """
@@ -31,7 +31,7 @@ def run(ctx, instance=None, rpi_mock=False, log='WARNING'):
         os.environ['RPI_MOCK'] = 'true'
 
     from src import system
-    system.start(instance)
+    system.start(instance, exc)
 
 
 @task

@@ -67,7 +67,7 @@ def get_modules():
     }
 
 
-def start(instance=None):
+def start(instance=None, exc=[]):
     """
     Run a process for each 2RSystem sub module
     """
@@ -78,7 +78,8 @@ def start(instance=None):
         control.add_gabby(get_modules()[instance])
     else:
         for k, v in get_modules().items():
-            logging.info(f'Add {k} to System Control')
-            control.add_gabby(v)
+            if k not in exc:
+                logging.info(f'Add {k} to System Control')
+                control.add_gabby(v)
 
     control.run()
