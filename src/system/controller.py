@@ -110,7 +110,7 @@ class Controller(gabby.Gabby):
             self.reset()
 
     def reset(self):
-        change_state(State.INITIAL)
+        self.change_state(State.INITIAL)
         self._power_level = 0
 
     def change_state(self, new_state):
