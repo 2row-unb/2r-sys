@@ -65,6 +65,12 @@ class Processor(gabby.Gabby):
 
         for i in range(N_IMUS):
             roll, pitch, yaw = self._ahrs[i].quaternion.to_euler_angles()
+            logging.info(f'RAW ROLL: {roll} | AVG: {self._averages[i][0]} | ROLL: {roll - self._averages[i][0]}')
+            logging.info(f'RAW PITCH: {pitch} | AVG: {self._averages[i][1]} | PITCH: {pitch - self._averages[i][1]}')
+            logging.info(f'RAW YAW: {yaw} | AVG: {self._averages[i][2]} | YAW: {yaw - self._averages[i][2]}')
+            roll -= self._averages[i][0]
+            pitch -= self._averages[i][1]
+            yaw -= self._averages[i][2]
             data.extend([roll, pitch, yaw])
             w, x, y, z = self._ahrs[i].quaternion.get_q()
             data.extend([x, y, z, w])
