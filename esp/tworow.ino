@@ -1,6 +1,5 @@
 #include <Wire.h> // Biblioteca para permitir a comunicação com dispositivos I2C/TWI
 #include <ESP8266WiFi.h> // biblioteca para usar as funções de Wifi do módulo ESP8266
-#include <ArduinoJson.h>
 #include <WiFiUdp.h>
 #include <stdlib.h>
 
@@ -15,6 +14,7 @@ unsigned char *msg_ptr;
 
 long now = millis();
 long last_msg_time = 0;
+long tmp = 0;
 
 void err_connection(char *stuff, int wait){
   Serial.print(F("[ERROR] Connection failed for "));
@@ -89,14 +89,17 @@ void write_message(){
   }
 
   *msg_ptr = '\0';
-  long now = millis();
-  if (now - last_msg_time > 2) {
-    Serial.print("Time elapsed: ");
-    Serial.println(now - last_msg_time);
-    last_msg_time = now;
-    tworow_write(msg);
-    Serial.println((char *) msg);
-  }
+
+  now = millis();
+  long elapsed = now - last_msg_time;
+  long now_delay = elapsed > desired_delay ? 0 : desired_delay - elapsed;
+  delay(now_delay);
+
+  tmp = last_msg_time;
+  last_msg_time = millis();
+
+  Serial.println(last_msg_time - tmp);
+  tworow_write(msg);
 }
 
 void setup() {
