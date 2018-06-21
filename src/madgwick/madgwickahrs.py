@@ -17,12 +17,17 @@
 
 import warnings
 import numpy as np
+import time
 from numpy.linalg import norm
 from .quaternion import Quaternion
 
+GAIN_TIMEOFF_DELAY = 30
+NORMAL_STEPS_NEEDED = 0
+
 class MadgwickAHRS:
-    samplePeriod = 1/20
+    samplePeriod = 0.015
     quaternion = Quaternion(1, 0, 0, 0)
+    overgained_beta = 1.0
     beta = 0.041
 
     def __init__(self, sampleperiod=None, quaternion=None, beta=None):
@@ -39,6 +44,9 @@ class MadgwickAHRS:
             self.quaternion = quaternion
         if beta is not None:
             self.beta = beta
+
+        self._gain_timeoff = time.time()
+        self._normal_steps_done = 0
 
     def update(self, magnetometer, accelerometer, gyroscope):
         """
@@ -90,7 +98,7 @@ class MadgwickAHRS:
         step /= norm(step)  # normalise step magnitude
 
         # Compute rate of change of quaternion
-        qdot = (q * Quaternion(0, gyroscope[0], gyroscope[1], gyroscope[2])) * 0.5 - self.beta * step.T
+        qdot = (q * Quaternion(0, gyroscope[0], gyroscope[1], gyroscope[2])) * 0.5 - self._beta() * step.T
 
         # Integrate to yield quaternion
         q += qdot * self.samplePeriod
@@ -128,8 +136,19 @@ class MadgwickAHRS:
         step /= norm(step)  # normalise step magnitude
 
         # Compute rate of change of quaternion
-        qdot = (q * Quaternion(0, gyroscope[0], gyroscope[1], gyroscope[2])) * 0.5 - self.beta * step.T
+        qdot = (q * Quaternion(0, gyroscope[0], gyroscope[1], gyroscope[2])) * 0.5 - self._beta() * step.T
 
         # Integrate to yield quaternion
         q += qdot * self.samplePeriod
         self.quaternion = Quaternion(q / norm(q))  # normalise quaternion
+
+    def update_gain_timeoff(self, gain_timeoff):
+        self._gain_timeoff = gain_timeoff
+
+    def _beta(self):
+        if self._normal_steps_done == NORMAL_STEPS_NEEDED or time.time() - self._gain_timeoff < GAIN_TIMEOFF_DELAY:
+            self._normal_steps_done = 0
+            return self.overgained_beta
+
+        self._normal_steps_done += 1
+        return self.beta
