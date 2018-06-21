@@ -27,7 +27,7 @@ class Controller(gabby.Gabby):
                 state, current_time = message.data[-2:]
                 time_elapsed = int(current_time - self._start_time)
 
-                self._state = state
+                self.change_state(state)
 
                 message.data = [*message.data[:-1], time_elapsed]
                 message.topics = self.output_topics.filter_by(
@@ -110,6 +110,10 @@ class Controller(gabby.Gabby):
             self.reset()
 
     def reset(self):
-        self._start_time = time.time()
-        self._state = State.INITIAL  # TODO: add (on) state change method
+        change_state(State.INITIAL)
         self._power_level = 0
+
+    def change_state(self, new_state):
+        if self._state != new_state:
+            self._state = new_state
+            self._start_time = time.time()

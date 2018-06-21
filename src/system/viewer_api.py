@@ -7,7 +7,6 @@ import _thread
 from functools import partial
 from flask import Flask, jsonify
 
-
 registered_routes = {}
 
 
@@ -58,35 +57,22 @@ class ViewerAPI(gabby.Gabby, Flask):
 
     @register_route('/info')
     def angles_view(self):
-        angles = self.info[0:3]
-        # quaternion = self.info[3:7]
-        power, state, time_elapsed = self.info[-3:]
+        if self.info:
+            angles = self.info[0:3]
+            # quaternion = self.info[3:7]
+            power, state, time_elapsed = self.info[-3:]
 
-        response = {
-            'angles': {
-                'athlete': {
-                    'legs': {
-                        'ul': angles,
-                        'll': angles,
-                        'ur': angles,
-                        'lr': angles
-                    },
-                    'arms': {
-                        'ul': angles,
-                        'll': angles,
-                        'ur': angles,
-                        'lr': angles
-                    }
-                }
-            },
-            'difficulty': 2,
-            'errors': [],
-            'power': power,
-            'speed': 33,
-            'state': state,
-            'timer': time_elapsed
-        } if self.info else {
-            'errors': ['Information unavailable']
-        }
+            response = {
+                'ul': angles,
+                'll': angles,
+                'difficulty': 2,
+                'errors': [],
+                'power': int(power),
+                'speed': 33,
+                'state': state,
+                'timer': time_elapsed
+            }
+        else:
+            response = {'errors': ['Information unavailable']}
 
         return jsonify(response)
