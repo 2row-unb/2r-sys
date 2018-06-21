@@ -63,24 +63,11 @@ class ViewerAPI(gabby.Gabby, Flask):
             power, state, time_elapsed = self.info[-3:]
 
             response = {
-                'athlete': {
-                    'legs': {
-                        'ul': angles,
-                        'll': angles,
-                        'ur': angles,
-                        'lr': angles
-                    },
-                    'arms': {
-                        'ul': angles,
-                        'll': angles,
-                        'ur': angles,
-                        'lr': angles
-                    },
-                    'root': angles
-                },
+                'ul': angles,
+                'll': angles,
                 'difficulty': 2,
                 'errors': [],
-                'power': power,
+                'power': int(power),
                 'speed': 33,
                 'state': state,
                 'timer': time_elapsed
