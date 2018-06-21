@@ -7,10 +7,7 @@
 #include "imu.h"
 #include "i2c.h"
 #include "mux.h"
-#include "udp.h"
-#include "mqttsn.h"
-
-#define MSG_SIZE 200
+#include "helpers.h"
 
 double serialized_data[N_IMUS * 9];
 unsigned char msg[MSG_SIZE] = "acknowledged";
@@ -19,11 +16,13 @@ unsigned char *msg_ptr;
 long now = millis();
 long last_msg_time = 0;
 
-void err_connection(char *stuff){
+void err_connection(char *stuff, int wait){
   Serial.print(F("[ERROR] Connection failed for "));
   Serial.println(stuff);
-  Serial.println(F("Retrying in 1 second."));
-  delay(1000);
+  Serial.print(F("Retrying in "));
+  Serial.print(wait/1000.0);
+  Serial.println(wait/1000.0 < 2 ? " second." : " seconds");
+  delay(wait);
 }
 
 void succ_connection(char *stuff){
@@ -32,23 +31,23 @@ void succ_connection(char *stuff){
   Serial.println();
 }
 
-void test(char *stuff, bool (*testfunc)(void)){
+void test(char *stuff, bool (*testfunc)(void), int wait){
   Serial.print(F("Testing connection for "));
   Serial.println(stuff);
-  while(!testfunc()) err_connection(stuff);
+  while(!testfunc()) err_connection(stuff, wait);
   succ_connection(stuff);
 }
 
 void setup_imus(){
   deactivate_mpu_hibernate_mode();
 
-  test("MPU6500", test_mpu_connection);
+  test("MPU6500", test_mpu_connection, 1000);
   delay(100);  
 
   setup_imu();
   delay(10);
 
-  test("AK8963", test_magnet_connection);
+  test("AK8963", test_magnet_connection, 1000);
   delay(100);
 }
 
@@ -64,12 +63,12 @@ void setup_serial(){
 }
 
 void setup_wifi(){
-  test("Wifi", wifi_connect);
-  test("UDP", udp_connect);
+  test("Wifi", wifi_connect, 5000);
+  test("UDP", udp_connect, 1000);
 }
 
 void setup_tworow(){
-  test("2RSystem", tworow_connect);
+  test("2RSystem", tworow_connect, 1000);
 }
 
 void write_message(){

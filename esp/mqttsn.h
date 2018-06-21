@@ -64,14 +64,6 @@ typedef struct MQTTSNClient {
   unsigned int port;
 } MQTTSNClient;
 
-
-
-// Custom variables for TWOROW SYSTEM
-char udp_host[] = "192.168.25.99";
-MQTTSNClient client = {"luan", udp_host , 1885};
-unsigned char ek_topic[] = "ek";
-
-
 void encode_flags(Flags *flags, unsigned char *s_flags){
   *s_flags = (unsigned char) 0;
   *s_flags |= (flags->dup << 7);
@@ -205,14 +197,6 @@ bool mqttsn_publish(MQTTSNClient *client, unsigned char * topic, unsigned char *
   UDP.beginPacket(client->host, client->port);
   UDP.write((char *) encoded_pub, pub.mh.fixed_len);
   UDP.endPacket();
-}
-
-void tworow_write(unsigned char *buff){
-  mqttsn_publish(&client, ek_topic, buff);
-}
-
-bool tworow_connect(){
-  return mqttsn_connect(&client);
 }
 
 #endif
