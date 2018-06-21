@@ -4,7 +4,6 @@ DESIRED_SAMPLES = 200
 ACCEPTED_DIFFERENCE = 1.5
 TIME_TO_START = 20
 
-
 class Calibrator():
     def __init__(self):
         self._start_time = time.time()
