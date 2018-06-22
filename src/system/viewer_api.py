@@ -61,12 +61,12 @@ class ViewerAPI(gabby.Gabby, Flask):
             angles = self.info[0:3]
             angles2 = self.info[3:6]
             # quaternion = self.info[3:7]
-            force, state, time_elapsed = self.info[-3:]
+            force, state, difficulty, time_elapsed = self.info[-4:]
 
             response = {
                 'ul': angles,
                 'll': angles2,
-                'difficulty': 2,
+                'difficulty': difficulty,
                 'force': int(force),
                 'state': state,
                 'timer': time_elapsed
