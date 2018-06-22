@@ -3,6 +3,7 @@ Module to filter and process all data
 """
 import logging
 import gabby
+import time
 
 from ..madgwick.madgwickahrs import MadgwickAHRS
 from .calibrator import Calibrator
