@@ -21,7 +21,7 @@ import time
 from numpy.linalg import norm
 from .quaternion import Quaternion
 
-GAIN_TIMEOFF_DELAY = 30
+GAIN_TIMEOFF_DELAY = 20
 NORMAL_STEPS_NEEDED = 100
 
 class MadgwickAHRS:

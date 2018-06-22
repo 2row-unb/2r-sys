@@ -7,7 +7,7 @@ import os
 MOSQUITTO_URL = 'localhost'
 MOSQUITTO_PORT = 1883
 MOSQUITTO_KEEPALIVE = 60
-N_IMUS = 2
+N_IMUS = 1
 
 RSMB_URL = 'localhost'
 RSMB_PORT = 1885
