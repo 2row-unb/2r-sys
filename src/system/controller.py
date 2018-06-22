@@ -77,25 +77,12 @@ class Controller(gabby.Gabby):
         button_up, button_down, button_reset = buttons
         old_power_level = self._power_level
         self.process_power_level(button_up, button_down)
-        reseted = self.process_reset(button_reset)
+        self.process_reset(button_reset)
         new_power_level = self._power_level
         if old_power_level != new_power_level:
             return [
                 gabby.Message(
                     (new_power_level,),
-                    topics=(
-                        self
-                        .output_topics
-                        .filter_by(
-                            name='controller_kernelcontrol'
-                        )
-                    )
-                )
-            ]
-        elif reseted:
-            return [
-                gabby.Message(
-                    (0,),
                     topics=(
                         self
                         .output_topics
@@ -122,8 +109,6 @@ class Controller(gabby.Gabby):
     def process_reset(self, button_reset):
         if button_reset == 1 and self._state == State.RUNNING:
             self.reset()
-            return True
-        return False
 
     def reset(self):
         self.change_state(State.INITIAL)
