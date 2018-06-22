@@ -12,11 +12,13 @@ _topics = gabby.TopicCollection(
     # (double)    1 - 18 : IMU data
     # (double)   19      : Power
     # (double)   20      : Timestamp
-    # kernel_controller
-    gabby.Topic('kc', 'd'*20, 'udp'),
+    gabby.Topic('kernel_controller', 'd'*20),
 
     # (int)      1 - 3  : Buttons
     gabby.Topic('kernelcontrol_controller', 'i'*3),
+
+    # (double)   1      : Force measure
+    gabby.Topic('kernelcontrol_kernel', 'd'),
 
     # (int)      1      : Weight Level
     gabby.Topic('controller_kernelcontrol', 'i'),

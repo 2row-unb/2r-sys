@@ -24,22 +24,22 @@ def get_modules():
     return {
         'kernel': Kernel(
             get_topics('ek'),
-            get_topics('kc'),
+            get_topics('kernel_controller'),
             False,
             *hosts_config,
-            transmission='udp'
+            transmission=['udp', 'tcp']
         ),
 
         'kernelcontrol': KernelControl(
             get_topics('controller_kernelcontrol'),
-            get_topics('kernelcontrol_controller'),
+            get_topics('kernelcontrol_controller', 'kernelcontrol_kernel'),
             True,
             *hosts_config,
         ),
 
         'controller': Controller(
             get_topics(
-                'kc',
+                'kernel_controller',
                 'kernelcontrol_controller',
                 'processor_controller'
             ),
@@ -50,7 +50,6 @@ def get_modules():
             ),
             True,
             *hosts_config,
-            transmission=['udp', 'tcp']
         ),
 
         'transmitter': ViewerAPI(

@@ -33,6 +33,7 @@ class KernelControl(gabby.Gabby):
 
     def run(self):
         _thread.start_new_thread(self.exec_buttons_reader, tuple())
+        _thread.start_new_thread(self.update_force_measure, tuple())
         super().run()
 
     @rpi_mock()
@@ -96,3 +97,60 @@ class KernelControl(gabby.Gabby):
             GPIO.setup(pin, GPIO.OUT)
         else:
             raise AttributeError
+
+    def update_force_measure(self):
+        for new_force_measure in self.get_force_measure():
+            self.send(
+                gabby.Message(
+                    (new_force_measure,),
+                    self.output_topics.filter_by(
+                        name='kernelcontrol_kernel'
+                    )
+                )
+            )
+            time.sleep(0.2)
+
+    def get_force_measure(self):
+        DAT1 = 15
+        CLK1 = 16
+        DAT2 = 13
+        CLK2 = 8
+
+        while True:
+            strain_gages = ((DAT1, CLK1), (DAT2, CLK2))
+            total_weight = sum(
+                [self._get_normalized_weight(dat, clk)
+                 for dat, clk in strain_gages]
+            )
+            power = total_weight*9.81*0.7071
+
+            yield power
+            time.sleep(0.3)
+
+    @rpi_mock(lambda: random.random() * 80)
+    def _get_normalized_weight(self, dat, clk):
+        counter = 0
+        GPIO.setup(clk, GPIO.OUT)
+        GPIO.setup(dat, GPIO.OUT)
+        GPIO.output(dat, 1)
+        GPIO.output(clk, 0)
+        GPIO.setup(dat, GPIO.IN)
+
+        while GPIO.input(dat):
+            pass
+
+        for _ in range(24):
+            GPIO.output(clk, 1)
+            counter = counter << 1
+
+            GPIO.output(clk, 0)
+            if GPIO.input(dat) == 0:
+                counter += 1
+
+        GPIO.output(clk, 1)
+        counter ^= 0x800000
+        GPIO.output(clk, 0)
+        weight = ((counter)/1406)
+        normalized_weight = (((weight - 5943)/15))
+
+        return normalized_weight
