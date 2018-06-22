@@ -19,7 +19,7 @@ class Processor(gabby.Gabby):
         super().__init__(*args, **kwargs)
         self._ahrs = [MadgwickAHRS()] * N_IMUS
         self._calibrators = [Calibrator()] * N_IMUS
-        self._averages = []
+        self._averages = [[0.0]*3]*N_IMUS
         self._state = State.INITIAL
         self._can_state_change = True
 
@@ -36,7 +36,8 @@ class Processor(gabby.Gabby):
     def update_ahrs(self, data):
         for i in range(N_IMUS):
             raw_data = data[i * 9:(i + 1) * 9]
-            self.AHRS_update(self._ahrs[i], raw_data)
+            ax, ay, az, gx, gy, gz, mx, my, mz = raw_data
+            self.AHRS_update(self._ahrs[i], [ax, ay, az, gx, gy, gz, mx, my, mz])
 
     def calibrate_measures(self, controller_state, current_time):
         if controller_state == State.INITIAL and self._can_state_change:
@@ -86,6 +87,8 @@ class Processor(gabby.Gabby):
         if self._state == State.RUNNING:
             for cal in self._calibrators:
                 cal.clear()
+            for ahrs in self._ahrs:
+                ahrs.update_gain_timeoff(time.time())
             self._state = State.INITIAL
 
         calibrated = all(
