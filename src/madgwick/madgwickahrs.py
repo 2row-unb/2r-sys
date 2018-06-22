@@ -25,7 +25,7 @@ GAIN_TIMEOFF_DELAY = 30
 NORMAL_STEPS_NEEDED = 100
 
 class MadgwickAHRS:
-    samplePeriod = 0.015
+    samplePeriod = 0.010
     quaternion = Quaternion(1, 0, 0, 0)
     overgained_beta = 1.0
     beta = 0.1
