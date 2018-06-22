@@ -36,7 +36,7 @@ class Controller(gabby.Gabby):
 
                 return [message]
 
-            elif message.belongs_to('kc'):
+            elif message.belongs_to('kernel_controller'):
                 logging.info('Received message from Kernel')
                 data = (*message.data[:-1], self._state, message.data[-1])
                 return self.process_views(data)

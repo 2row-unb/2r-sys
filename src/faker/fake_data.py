@@ -21,7 +21,9 @@ def data_generator(func=None):
 
 def generate_data(i):
     noise = (random.random() * ERROR) - ERROR / 2.0
-    return [np.sin(x[i])*AMPL + noise]*18
+    fake_data = [np.sin(x[i])*AMPL + noise]*9
+    fake_data.append(random.randint(0, 1))
+    return fake_data
 
 
 def run():

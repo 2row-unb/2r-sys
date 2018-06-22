@@ -23,7 +23,7 @@ def get_modules():
 
     return {
         'kernel': Kernel(
-            get_topics('ek'),
+            get_topics('ek', 'kernelcontrol_kernel'),
             get_topics('kernel_controller'),
             False,
             *hosts_config,

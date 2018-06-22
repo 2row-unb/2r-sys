@@ -7,7 +7,7 @@ import gabby
 _topics = gabby.TopicCollection(
     # (double)    1 - 18 : IMU data.
     # esp_kernel topic
-    gabby.Topic('ek', 'd'*18, 'udp'),
+    gabby.Topic('ek', 'd'*9 + 'i', 'udp'),
 
     # (double)    1 - 18 : IMU data
     # (double)   19      : Power

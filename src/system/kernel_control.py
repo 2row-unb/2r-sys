@@ -108,7 +108,6 @@ class KernelControl(gabby.Gabby):
                     )
                 )
             )
-            time.sleep(0.2)
 
     def get_force_measure(self):
         DAT1 = 15
