@@ -12,7 +12,8 @@ _topics = gabby.TopicCollection(
     # (double)    1 - 18 : IMU data
     # (double)   19      : Power
     # (double)   20      : Timestamp
-    gabby.Topic('kernel_controller', 'd'*20),
+    # kernel_controller
+    gabby.Topic('kc', 'd'*20, 'udp'),
 
     # (int)      1 - 3  : Buttons
     gabby.Topic('kernelcontrol_controller', 'i'*3),

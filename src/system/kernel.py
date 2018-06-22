@@ -38,7 +38,7 @@ class Kernel(gabby.Gabby):
             return [
                 gabby.Message(
                     controller_data,
-                    self.output_topics.filter_by(name='kernel_controller')
+                    self.output_topics.filter_by(name='kc')
                 )
             ]
         return []

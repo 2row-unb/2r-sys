@@ -22,13 +22,13 @@ from numpy.linalg import norm
 from .quaternion import Quaternion
 
 GAIN_TIMEOFF_DELAY = 30
-NORMAL_STEPS_NEEDED = 0
+NORMAL_STEPS_NEEDED = 100
 
 class MadgwickAHRS:
     samplePeriod = 0.015
     quaternion = Quaternion(1, 0, 0, 0)
     overgained_beta = 1.0
-    beta = 0.041
+    beta = 0.1
 
     def __init__(self, sampleperiod=None, quaternion=None, beta=None):
         """
