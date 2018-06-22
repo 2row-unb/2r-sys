@@ -1,20 +1,23 @@
 #include <Wire.h> // Biblioteca para permitir a comunicação com dispositivos I2C/TWI
 #include <ESP8266WiFi.h> // biblioteca para usar as funções de Wifi do módulo ESP8266
+#include <ArduinoJson.h>
 #include <WiFiUdp.h>
 #include <stdlib.h>
 
-#include "imu.h"
 #include "i2c.h"
-#include "mux.h"
+#include "imu.h"
 #include "helpers.h"
 
-double serialized_data[N_IMUS * 9];
+float serialized_data[N_IMUS * 9];
 unsigned char msg[MSG_SIZE] = "acknowledged";
 unsigned char *msg_ptr;
 
+IMU imu_left_leg_down;
+IMU imu_left_leg_up;
+
 long now = millis();
 long last_msg_time = 0;
-long tmp = 0;
+long tmp;
 
 void err_connection(char *stuff, int wait){
   Serial.print(F("[ERROR] Connection failed for "));
@@ -38,13 +41,16 @@ void test(char *stuff, bool (*testfunc)(void), int wait){
   succ_connection(stuff);
 }
 
-void setup_imus(){
+void setup_suit(){
+  build_imu(&imu_left_leg_up, 1);
+  build_imu(&imu_left_leg_down, 5);
+  register_imus();
   deactivate_mpu_hibernate_mode();
 
   test("MPU6500", test_mpu_connection, 1000);
   delay(100);  
 
-  setup_imu();
+  setup_imus();
   delay(10);
 
   test("AK8963", test_magnet_connection, 1000);
@@ -72,11 +78,11 @@ void setup_tworow(){
 }
 
 void write_message(){
-  get_serialized_data(serialized_data);
+  get_imu_serialized_data(serialized_data);
   msg_ptr = msg;
   for(int i = 0; i < 18; i++) {
     sprintf((char *) msg_ptr, "%f", serialized_data[i]); 
-    msg_ptr += sizeof(double);
+    msg_ptr += sizeof(float);
     if(*(msg_ptr - 1) == '.'){
       *msg_ptr = '0';
       msg_ptr++;
@@ -87,7 +93,6 @@ void write_message(){
       msg_ptr++;
     }
   }
-
   *msg_ptr = '\0';
 
   now = millis();
@@ -98,27 +103,30 @@ void write_message(){
   tmp = last_msg_time;
   last_msg_time = millis();
 
-  Serial.println(last_msg_time - tmp);
+  Serial.print(last_msg_time - tmp);
+  Serial.print(": ");
+  Serial.println((char *) msg);
   tworow_write(msg);
+}
+
+void register_imus(){
+  register_imu(&imu_left_leg_up);
+  register_imu(&imu_left_leg_down);
 }
 
 void setup() {
   delay(2000);
+  setup_serial();
   Serial.println("Starting 2RE-Kernel");
   Serial.println();
-  setup_serial();
   setup_i2c();
-  setup_imus(); 
-  setup_mux_pins();
   setup_wifi();
+  setup_suit(); 
   setup_tworow();
 }
 
 void loop() {
-  changeMux(1, 0, 0);
-  update_imu_data(0);
-  changeMux(0, 1, 0);
-  update_imu_data(1);
+  update_all_imus();
   write_message();
 }
 
