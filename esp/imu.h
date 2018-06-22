@@ -7,7 +7,7 @@
 #include "mux.h"
 
 // Number of IMUs
-#define N_IMUS 2
+#define N_IMUS 1
 
 // Chip address
 #define MPU6500_address 0x68 // MPU6500 (gyros and accel)
@@ -44,18 +44,20 @@ typedef enum Sensor{
 typedef struct IMU{
   int id;
   Mux mux;
-  float offsets[4][3];
-  float data[3][3];
-  float temp;
+  double offsets[4][3];
+  int16_t raw_data[3][3];
+  double data[3][3];
+  int16_t raw_temp;
+  double temp;
+  uint8_t gir_acel_buffer[14];
+  uint8_t mag_buffer[7];
 } IMU;
 
 IMU *registered_imus[N_IMUS];
-int n_imu = 0;
-float raw_data[3][3];
-float raw_temp;
-uint8_t gir_acel_buffer[14];
-uint8_t mag_buffer[7];
-bool new_magnet_data = false;
+
+void activate_imu(IMU *imu){
+  activate_mux(&(imu->mux));
+}
 
 void print_imu(IMU *imu){
   Serial.print("IMU (");
@@ -67,6 +69,7 @@ void print_imu(IMU *imu){
 }
 
 void register_imu(IMU *imu){
+  static int n_imu = 0;
   registered_imus[n_imu++] = imu;
   print_imu(imu);
 }
@@ -87,6 +90,24 @@ void register_offsets(IMU *imu){
       imu->offsets[MAGNET][Z] = 210.00;
 
       imu->offsets[MAGNET_SCALE][X] = 1.00;
+      imu->offsets[MAGNET_SCALE][Y] = 0.97;
+      imu->offsets[MAGNET_SCALE][Z] = 1.02;
+      break;
+
+    case 2:
+      imu->offsets[ACCEL][X] = -320.00;
+      imu->offsets[ACCEL][Y] = -144.00;
+      imu->offsets[ACCEL][Z] = 16486.00;
+                               
+      imu->offsets[GYRO][X] = -162.00;
+      imu->offsets[GYRO][Y] = 344.00;
+      imu->offsets[GYRO][Z] = -437.00;
+                                     
+      imu->offsets[MAGNET][X] = 482.50;
+      imu->offsets[MAGNET][Y] = -95.00;
+      imu->offsets[MAGNET][Z] = 62.0;
+                                     
+      imu->offsets[MAGNET_SCALE][X] = 1.01;
       imu->offsets[MAGNET_SCALE][Y] = 0.97;
       imu->offsets[MAGNET_SCALE][Z] = 1.02;
       break;
@@ -114,8 +135,9 @@ void register_offsets(IMU *imu){
 void build_imu(IMU *imu, int id){
   uint8_t states[N_IMUS];
   switch(id){
+    case 2:
     case 1:
-      states[0] = 1;
+      states[0] = 0;
       states[1] = 0;
       break;
     case 5:
@@ -128,58 +150,53 @@ void build_imu(IMU *imu, int id){
   register_offsets(imu);
 }
 
-void read_mpu(void){
-  void_read(MPU6500_address, 0x3B, 14, gir_acel_buffer);
-  raw_data[ACCEL][X] = (float) (gir_acel_buffer[0] << 8  | gir_acel_buffer[1]);
-  raw_data[ACCEL][Y] = (float) (gir_acel_buffer[2] << 8  | gir_acel_buffer[3]);
-  raw_data[ACCEL][Z] = (float) (gir_acel_buffer[4] << 8  | gir_acel_buffer[5]);
-  raw_temp           = (float) (gir_acel_buffer[6] << 8  | gir_acel_buffer[7]);
-  raw_data[GYRO][X]  = (float) (gir_acel_buffer[8] << 8  | gir_acel_buffer[9]);
-  raw_data[GYRO][Y]  = (float) (gir_acel_buffer[10] << 8 | gir_acel_buffer[11]);
-  raw_data[GYRO][Z]  = (float) (gir_acel_buffer[12] << 8 | gir_acel_buffer[13]);
+void read_mpu(IMU *imu){
+  void_read(MPU6500_address, 0x3B, 14, imu->gir_acel_buffer);
+  imu->raw_data[ACCEL][X] = (imu->gir_acel_buffer[0]  << 8 | imu->gir_acel_buffer[1]);
+  imu->raw_data[ACCEL][Y] = (imu->gir_acel_buffer[2]  << 8 | imu->gir_acel_buffer[3]);
+  imu->raw_data[ACCEL][Z] = (imu->gir_acel_buffer[4]  << 8 | imu->gir_acel_buffer[5]);
+  imu->raw_temp           = (imu->gir_acel_buffer[6]  << 8 | imu->gir_acel_buffer[7]);
+  imu->raw_data[GYRO][X]  = (imu->gir_acel_buffer[8]  << 8 | imu->gir_acel_buffer[9]);
+  imu->raw_data[GYRO][Y]  = (imu->gir_acel_buffer[10] << 8 | imu->gir_acel_buffer[11]);
+  imu->raw_data[GYRO][Z]  = (imu->gir_acel_buffer[12] << 8 | imu->gir_acel_buffer[13]);
 }
 
-void read_magnet(void){
+void read_magnet(IMU *imu){
+  // [TODO] Separate raw_data
   uint8_t data;
   void_read(AK8963_address, 0x02, 1, &data); // ST1=0x02
-  new_magnet_data = data & 0x01;
-  if(new_magnet_data == true) {
-    void_read(AK8963_address, 0x03, 7, mag_buffer); // MAGN_XOUT_L = 0x03
-    uint8_t c = mag_buffer[6];
-    if(!(c & 0x08)) {
-      raw_data[MAGNET][X] = (mag_buffer[3] << 8 | mag_buffer[2]); 
-      raw_data[MAGNET][Y] = (mag_buffer[1] << 8 | mag_buffer[0]); 
-      raw_data[MAGNET][Z] = -(mag_buffer[5] << 8 | mag_buffer[4]);
+  if(data & 0x01){
+    void_read(AK8963_address, 0x03, 7, imu->mag_buffer); // MAGN_XOUT_L = 0x03
+    if(!(imu->mag_buffer[6] & 0x08)) {
+      imu->raw_data[MAGNET][X] =  (imu->mag_buffer[3] << 8 | imu->mag_buffer[2]); 
+      imu->raw_data[MAGNET][Y] =  (imu->mag_buffer[1] << 8 | imu->mag_buffer[0]); 
+      imu->raw_data[MAGNET][Z] = -(imu->mag_buffer[5] << 8 | imu->mag_buffer[4]);
     }
   }
 }
 
-float degree_to_rad(float angle){
+double degree_to_rad(double angle){
   return (angle * M_PI) / 180.0;
 }
 
 void update_imu_data(IMU *imu){
-  imu->data[ACCEL][X] = (raw_data[ACCEL][X] - imu->offsets[ACCEL][X])* SENSITIVITY_ACCEL;
-  imu->data[ACCEL][Y] = (raw_data[ACCEL][Y] - imu->offsets[ACCEL][Y]) * SENSITIVITY_ACCEL;
-  imu->data[ACCEL][Z] = (raw_data[ACCEL][Z] - (imu->offsets[ACCEL][Z] - (32768/2))) * SENSITIVITY_ACCEL;
+  imu->data[ACCEL][X] = (imu->raw_data[ACCEL][X] - imu->offsets[ACCEL][X])* SENSITIVITY_ACCEL;
+  imu->data[ACCEL][Y] = (imu->raw_data[ACCEL][Y] - imu->offsets[ACCEL][Y]) * SENSITIVITY_ACCEL;
+  imu->data[ACCEL][Z] = (imu->raw_data[ACCEL][Z] - (imu->offsets[ACCEL][Z] - (32768/2))) * SENSITIVITY_ACCEL;
 
-  imu->data[GYRO][X] = degree_to_rad((raw_data[GYRO][X] - imu->offsets[GYRO][X]) * SENSITIVITY_GYRO);
-  imu->data[GYRO][Y] = degree_to_rad((raw_data[GYRO][Y] - imu->offsets[GYRO][Y]) * SENSITIVITY_GYRO);
-  imu->data[GYRO][Z] = degree_to_rad((raw_data[GYRO][Z] - imu->offsets[GYRO][Z]) * SENSITIVITY_GYRO);//°/s
+  imu->data[GYRO][X] = degree_to_rad((imu->raw_data[GYRO][X] - imu->offsets[GYRO][X]) * SENSITIVITY_GYRO);
+  imu->data[GYRO][Y] = degree_to_rad((imu->raw_data[GYRO][Y] - imu->offsets[GYRO][Y]) * SENSITIVITY_GYRO);
+  imu->data[GYRO][Z] = degree_to_rad((imu->raw_data[GYRO][Z] - imu->offsets[GYRO][Z]) * SENSITIVITY_GYRO);
 
-  imu->data[MAGNET][X] = ((raw_data[MAGNET][X] - imu->offsets[MAGNET][X]) * imu->offsets[MAGNET_SCALE][X]) * SENSITIVITY_MAGN;
-  imu->data[MAGNET][Y] = ((raw_data[MAGNET][Y] - imu->offsets[MAGNET][Y]) * imu->offsets[MAGNET_SCALE][Y]) * SENSITIVITY_MAGN;
-  imu->data[MAGNET][Z] = ((raw_data[MAGNET][Z] - imu->offsets[MAGNET][Z]) * imu->offsets[MAGNET_SCALE][Z]) * SENSITIVITY_MAGN;
-}
-
-void activate_imu(IMU *imu){
-  activate_mux(&(imu->mux));
+  imu->data[MAGNET][X] = ((imu->raw_data[MAGNET][X] - imu->offsets[MAGNET][X]) * imu->offsets[MAGNET_SCALE][X]) * SENSITIVITY_MAGN;
+  imu->data[MAGNET][Y] = ((imu->raw_data[MAGNET][Y] - imu->offsets[MAGNET][Y]) * imu->offsets[MAGNET_SCALE][Y]) * SENSITIVITY_MAGN;
+  imu->data[MAGNET][Z] = ((imu->raw_data[MAGNET][Z] - imu->offsets[MAGNET][Z]) * imu->offsets[MAGNET_SCALE][Z]) * SENSITIVITY_MAGN;
 }
 
 void update_imu(IMU *imu){
   activate_imu(imu);
-  read_mpu();
-  read_magnet();
+  read_mpu(imu);
+  read_magnet(imu);
   update_imu_data(imu);
 }
 
@@ -193,6 +210,7 @@ void get_imu_serialized_data(float *serialized_data){
   IMU *current_imu;
   for(int i = 0; i < N_IMUS; i++){
     current_imu = registered_imus[i];
+    print_imu(current_imu);
     for(int k = 0; k < 3; k++){
       for(int j = 0; j < 3; j++){
         *(serialized_data++) = current_imu->data[k][j];

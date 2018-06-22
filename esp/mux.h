@@ -39,10 +39,6 @@ void activate_mux(Mux *mux) {
   active_mux = mux;
   mux->is_active = true;
   write_mux_pins(mux);
-  Serial.print("CHANGED MUX: ");
-  Serial.print(mux->pins_states[0]);
-  Serial.print(" | ");
-  Serial.println(mux->pins_states[1]);
 }
 
 #endif

@@ -6,13 +6,13 @@
 
 // wifi connection variables
 const char* wifi_ssid = "2ROW-PRIVATE";
-const char* wifi_password = "xxx";
+const char* wifi_password = "123chaim4";
 
 // Custom variables for TWOROW SYSTEM
 char udp_host[] = "192.168.1.101";
 unsigned int udp_port = 1885;
 MQTTSNClient client = {"suit", udp_host, udp_port};
-unsigned char ek_topic[] = "ek";
+unsigned char ek_topic[] = "eq";
 
 // boolean variables
 bool wifiConnected = false;

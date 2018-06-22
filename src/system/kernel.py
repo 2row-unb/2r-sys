@@ -17,7 +17,7 @@ class Kernel(gabby.Gabby):
     def transform(self, client, message):
         logging.info(f'Received message from {message.topic}')
 
-        if message.topic == 'ek':
+        if message.topic in ['ek', 'eq']:
             logging.debug(
                 f"Data: {message.payload.decode('utf-8').split(';')}"
             )

@@ -8,12 +8,11 @@
 #include "imu.h"
 #include "helpers.h"
 
-float serialized_data[N_IMUS * 9];
+float serialized_data[N_IMUS * 9 + 1];
 unsigned char msg[MSG_SIZE] = "acknowledged";
 unsigned char *msg_ptr;
 
-IMU imu_left_leg_down;
-IMU imu_left_leg_up;
+IMU imu;
 
 long now = millis();
 long last_msg_time = 0;
@@ -42,8 +41,7 @@ void test(char *stuff, bool (*testfunc)(void), int wait){
 }
 
 void setup_suit(){
-  build_imu(&imu_left_leg_up, 1);
-  build_imu(&imu_left_leg_down, 5);
+  build_imu(&imu, 5);
   register_imus();
   deactivate_mpu_hibernate_mode();
 
@@ -80,7 +78,7 @@ void setup_tworow(){
 void write_message(){
   get_imu_serialized_data(serialized_data);
   msg_ptr = msg;
-  for(int i = 0; i < 18; i++) {
+  for(int i = 0; i < N_IMUS * 9; i++) {
     sprintf((char *) msg_ptr, "%f", serialized_data[i]); 
     msg_ptr += sizeof(float);
     if(*(msg_ptr - 1) == '.'){
@@ -88,12 +86,13 @@ void write_message(){
       msg_ptr++;
     }
 
-    if(i < 17){
+    if(i < N_IMUS * 9){
       *msg_ptr = ';';
       msg_ptr++;
     }
   }
-  *msg_ptr = '\0';
+  *(msg_ptr++) = '1';
+  *(msg_ptr) = '\0';
 
   now = millis();
   long elapsed = now - last_msg_time;
@@ -110,8 +109,7 @@ void write_message(){
 }
 
 void register_imus(){
-  register_imu(&imu_left_leg_up);
-  register_imu(&imu_left_leg_down);
+  register_imu(&imu);
 }
 
 void setup() {
@@ -128,5 +126,6 @@ void setup() {
 void loop() {
   update_all_imus();
   write_message();
+  delay(5);
 }
 
