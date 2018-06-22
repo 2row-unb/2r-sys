@@ -29,12 +29,13 @@ class Controller(gabby.Gabby):
 
                 self.change_state(state)
 
-                message.data = [*message.data[:-1], time_elapsed]
-                message.topics = self.output_topics.filter_by(
+                msg = gabby.Message(
+						[*message.data[:-1], self._power_level, time_elapsed],
+                		topics=self.output_topics.filter_by(
                     name='controller_transmitter'
-                )
+                ))
 
-                return [message]
+                return [msg]
 
             elif message.belongs_to('kernel_controller'):
                 logging.info('Received message from Kernel')

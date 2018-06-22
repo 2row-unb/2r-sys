@@ -10,7 +10,7 @@ class Kernel(gabby.Gabby):
     def __init__(self, *args, **kwargs):
         self.weight_info = 0
         self.force_measure = 0.0
-        self.imus =[[0.00]*9, [0.00]*9]
+        self.imus =[[1.00]*9, [2.00]*9]
 
         super().__init__(*args, **kwargs)
 

@@ -18,8 +18,8 @@ class Processor(gabby.Gabby):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._ahrs = [MadgwickAHRS()] * N_IMUS
-        self._calibrators = [Calibrator()] * N_IMUS
+        self._ahrs = [MadgwickAHRS(), MadgwickAHRS()]
+        self._calibrators = [Calibrator(), Calibrator()]
         self._averages = [[0.0]*3]*N_IMUS
         self._state = State.INITIAL
         self._can_state_change = True
@@ -38,6 +38,7 @@ class Processor(gabby.Gabby):
         for i in range(N_IMUS):
             raw_data = data[i * 9:(i + 1) * 9]
             ax, ay, az, gx, gy, gz, mx, my, mz = raw_data
+            logging.info(f'i: {i}')
             self.AHRS_update(self._ahrs[i], [ax, ay, az, gx, gy, gz, mx, my, mz])
 
     def calibrate_measures(self, controller_state, current_time):
@@ -74,8 +75,6 @@ class Processor(gabby.Gabby):
             pitch -= self._averages[i][1]
             yaw -= self._averages[i][2]
             data.extend([roll, pitch, yaw])
-            w, x, y, z = self._ahrs[i].quaternion.get_q()
-            data.extend([x, y, z, w])
         # [TODO] set number of IMUS dinamically
         weight, state, timestamp = input_data[9 * 2:]
         data.extend([weight, self._state, timestamp])

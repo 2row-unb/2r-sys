@@ -41,7 +41,7 @@ _topics = gabby.TopicCollection(
     # (double)    9      : State
     # (double)   10      : Timestamp
     # [TODO] Put state as an integer
-    gabby.Topic('processor_controller', 'd'*10),
+    gabby.Topic('processor_controller', 'd'*9),
 )
 
 
