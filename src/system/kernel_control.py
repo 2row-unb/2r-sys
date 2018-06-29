@@ -121,18 +121,18 @@ class KernelControl(gabby.Gabby):
         CLK2 = 8
 
         while True:
-            strain_gages = ((DAT1, CLK1), (DAT2, CLK2))
+            strain_gages = ((DAT1, CLK1, 6020), (DAT2, CLK2, 5943))
             total_weight = sum(
-                [self._get_normalized_weight(dat, clk)
-                 for dat, clk in strain_gages]
+                [self._get_normalized_weight(dat, clk, offset)
+                 for dat, clk, offset in strain_gages]
             )
             power = total_weight*9.81*0.7071
 
-            yield power
+            yield power if power > 0 else 0
             time.sleep(0.3)
 
     @rpi_mock(lambda: random.random() * 80)
-    def _get_normalized_weight(self, dat, clk):
+    def _get_normalized_weight(self, dat, clk, offset):
         counter = 0
         GPIO.setup(clk, GPIO.OUT)
         GPIO.setup(dat, GPIO.OUT)
@@ -155,6 +155,6 @@ class KernelControl(gabby.Gabby):
         counter ^= 0x800000
         GPIO.output(clk, 0)
         weight = ((counter)/1406)
-        normalized_weight = (((weight - 5943)/15))
+        normalized_weight = (((weight - offset)/15))
 
         return normalized_weight
