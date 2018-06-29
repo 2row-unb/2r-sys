@@ -18,20 +18,22 @@ else:
     GPIO.setwarnings(False)
     GPIO.setmode(GPIO.BOARD)
 
+_ON = 0
+_OFF = 1
+
 
 class KernelControl(gabby.Gabby):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.power_level = 0
-        self._setup_relays(37, 35, 33, 31)
-        self._setup_buttons(up=18, down=11, reset=12)
 
     def transform(self, client, message):
         if message.belongs_to('controller_kernelcontrol'):
             self.update_power_level(message.data)
-        return []
 
     def run(self):
+        self._setup_relays(37, 35, 33, 31)
+        self._setup_buttons(up=18, down=11, reset=12)
         _thread.start_new_thread(self.exec_buttons_reader, tuple())
         _thread.start_new_thread(self.update_force_measure, tuple())
         super().run()
@@ -44,9 +46,7 @@ class KernelControl(gabby.Gabby):
         else:
             GPIO.output(pins, state)
 
-    def update_power_level(self, button_data):
-        _ON = 0
-        _OFF = 1
+    def update_power_level(self, button_data=(0,)):
         power_level, = button_data
 
         logging.warning(f'Changing power level to {power_level}')
@@ -54,6 +54,10 @@ class KernelControl(gabby.Gabby):
         self._turn(self.RELAYS_PINS, _OFF)
         if power_level >= 0 and power_level < 4:
             self._turn(self.RELAYS_PINS[power_level], _ON)
+        else:
+            logging.error(f'Invalid power level value {power_level}')
+            logging.error('Setting relay_pins to zero')
+            self._turn(self.RELAYS_PINS[0], _ON)
 
     def exec_buttons_reader(self):
         for new_state in self.get_buttons():
@@ -88,11 +92,12 @@ class KernelControl(gabby.Gabby):
         self.RELAYS_PINS = pins
         for pin in self.RELAYS_PINS:
             self._setup_pin(pin, 'output')
+        self.update_power_level()
 
     @rpi_mock()
     def _setup_pin(self, pin, state):
         if state == 'input':
-            GPIO.setup(pin, GPIO.IN)
+            GPIO.setup(pin, GPIO.IN, GPIO.PUD_DOWN)
         elif state == 'output':
             GPIO.setup(pin, GPIO.OUT)
         else:
