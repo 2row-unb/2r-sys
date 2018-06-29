@@ -91,7 +91,7 @@ void write_message(){
       msg_ptr++;
     }
   }
-  *(msg_ptr++) = '1';
+  *(msg_ptr++) = '0';
   *(msg_ptr) = '\0';
 
   now = millis();
