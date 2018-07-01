@@ -4,6 +4,7 @@ Module to filter and process all data
 import logging
 import gabby
 import time
+from math import pi
 
 from ..madgwick.madgwickahrs import MadgwickAHRS
 from .calibrator import Calibrator
@@ -71,15 +72,30 @@ class Processor(gabby.Gabby):
             logging.info(f'RAW ROLL: {roll} | AVG: {self._averages[i][0]} | ROLL: {roll - self._averages[i][0]}')
             logging.info(f'RAW PITCH: {pitch} | AVG: {self._averages[i][1]} | PITCH: {pitch - self._averages[i][1]}')
             logging.info(f'RAW YAW: {yaw} | AVG: {self._averages[i][2]} | YAW: {yaw - self._averages[i][2]}')
-            roll -= self._averages[i][0]
-            pitch -= self._averages[i][1]
-            yaw -= self._averages[i][2]
+
+            roll = corrected_value(roll, self._averages[i][0])
+            pitch = corrected_value(pitch, self._averages[i][1])
+            yaw = corrected_value(yaw, self._averages[i][2])
+
             data.extend([roll, pitch, yaw])
         # [TODO] set number of IMUS dinamically
         weight, state, timestamp = input_data[9 * 2:]
         data.extend([weight, self._state, timestamp])
 
         return data
+
+    def corrected_value(self, value, average):
+        if value > average:
+            if value - average < pi / 2.0:
+                value = value - average
+            else:
+                value = 0.0
+        else:
+            if average - value < pi / 2.0:
+                value = 0.0
+            else:
+                value = 2 * pi + value - average
+        return value
 
     def run_calibration_step(self, current_time):
         logging.info('Running calibration step')
